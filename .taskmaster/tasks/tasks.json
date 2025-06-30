@@ -303,34 +303,116 @@
       {
         "id": 6,
         "title": "Implement Customer Resource and Model",
-        "description": "Develop CustomerResource for client management and Customer model for data representation with comprehensive PHPDoc documentation.",
-        "status": "pending",
+        "description": "Develop CustomerResource for API client management and CustomerDTO for data transfer with comprehensive PHPDoc documentation. Create a clean interface for working with XGATE API customer data.",
+        "status": "in-progress",
         "dependencies": [
           5
         ],
         "priority": "medium",
-        "details": "Create CustomerResource class for API calls (create, get). Use Symfony Validator (^6.0) for data validation. Implement Customer model with required fields (id, name, email, document, phone, createdAt, updatedAt). Include complete PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and field descriptions; @example annotations for customer creation and retrieval. Use PHP 8.1+ types and detailed docblocks for model properties and validation rules.",
-        "testStrategy": "Test customer creation and retrieval using mocked HTTP responses. Validate model serialization, data validation rules, and error messages with unit tests. Use mock HTTP client to simulate API responses without real API calls. Verify PHPDoc quality and IDE autocompletion functionality.",
-        "subtasks": []
+        "details": "Create CustomerResource class for HTTP API calls (create, get, update, delete). Implement CustomerDTO (Data Transfer Object) as a simple class for data transport between API and client. Focus on JSON serialization/deserialization and data standardization. Use basic type validation only - avoid complex domain validation. Include complete PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and field descriptions; @example annotations for customer operations. Use PHP 8.1+ types for clean SDK interface.",
+        "testStrategy": "Test customer CRUD operations using mocked HTTP responses. Validate DTO serialization/deserialization, basic type validation, and error handling with unit tests. Use mock HTTP client to simulate API responses without real API calls. Verify PHPDoc quality and IDE autocompletion functionality.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create CustomerDTO for Data Transfer",
+            "description": "Implement the CustomerDTO class as a simple data transfer object for API communication",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create CustomerDTO with properties (id, name, email, phone, address) as a simple data container. Implement JSON serialization/deserialization methods, basic type checking, and data standardization. Focus on clean data transport between API and client without complex business logic or validation rules.",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement CustomerResource CRUD Methods",
+            "description": "Develop the CustomerResource class with full CRUD API methods including proper HTTP response handling",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Create CustomerResource class with create() method for POST requests, get() method for retrieving customer data, update() method for PUT/PATCH requests, and delete() method for DELETE requests. Implement proper HTTP status codes, error handling, request/response formatting, and JSON serialization integration with CustomerDTO.",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add PHPDoc Documentation with SDK Examples",
+            "description": "Create comprehensive PHPDoc documentation for CustomerDTO and CustomerResource with SDK usage examples",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Write detailed PHPDoc comments for all public methods, include parameter descriptions, return types, exception documentation, and practical SDK usage examples. Add class-level documentation explaining the Customer SDK architecture, data flow patterns, and integration examples with XGATE API.",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Testing Suite for Customer SDK Components",
+            "description": "Create unit and integration tests for CustomerDTO serialization and CustomerResource API methods",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Develop PHPUnit tests covering DTO serialization/deserialization scenarios, API endpoint testing for all CRUD operations, error handling verification, JSON data transformation tests, and integration tests. Include test fixtures, mock HTTP responses, and SDK usage pattern validation.",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 7,
         "title": "Develop Pix Resource and Key Model",
-        "description": "Build PixResource for PIX key management and PixKey model with complete PHPDoc documentation.",
+        "description": "Build PixResource for PIX key management HTTP operations and PixKeyDTO for data transfer with complete PHPDoc documentation.",
         "status": "pending",
         "dependencies": [
           5,
           6
         ],
         "priority": "medium",
-        "details": "Implement PixResource for creating and listing PIX keys. Validate key types (CPF, CNPJ, email, phone, random). Use Symfony Validator for validation. Implement PixKey model. Include comprehensive PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for PIX key operations. Document key type validation rules and enum values with proper PHP 8.1+ types.",
-        "testStrategy": "Test PIX key creation and listing using mocked API responses. Validate key type validation rules and error handling for invalid key types with unit tests. Use comprehensive mocks to test all PIX key scenarios. Verify PHPDoc completeness and IDE support for key type autocompletion.",
-        "subtasks": []
+        "details": "Implement PixResource for creating and listing PIX keys through XGATE API HTTP operations. Create PixKeyDTO (Data Transfer Object) for simple data transport of PIX key information. Focus on JSON serialization/deserialização and API data standardization. Remove domain validation logic - keep DTOs simple for data transport. Include comprehensive PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for PIX key operations. Document DTO structure and API integration patterns with proper PHP 8.1+ types.",
+        "testStrategy": "Test PIX key creation and listing using mocked API responses. Focus on JSON serialization/deserialization testing for PixKeyDTO. Test HTTP operations in PixResource with comprehensive mocks for all PIX key API scenarios. Verify PHPDoc completeness and IDE support for DTO properties and resource methods autocompletion. Test API data standardization and error handling.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create PixKeyDTO class",
+            "description": "Implement PixKeyDTO as a simple Data Transfer Object for PIX key data transport",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create PixKeyDTO class focused on data transport without domain validation. Include properties for PIX key data (key, type, account info). Implement JSON serialization/deserialization methods. Add comprehensive PHPDoc with property descriptions and usage examples.",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement PixResource HTTP operations",
+            "description": "Build PixResource class for PIX key API operations through XGATE",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Implement PixResource with methods for creating and listing PIX keys via HTTP requests to XGATE API. Focus on clean API interface without domain validation. Handle API responses and convert to PixKeyDTO objects. Include error handling for HTTP operations.",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add JSON serialization support",
+            "description": "Implement proper JSON handling for PixKeyDTO",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Add JSON serialization and deserialization methods to PixKeyDTO. Ensure proper mapping between API response format and DTO properties. Handle API data standardization and format conversion.",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Complete PHPDoc documentation",
+            "description": "Add comprehensive PHPDoc documentation for PixResource and PixKeyDTO",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Document all classes, methods, and properties with complete PHPDoc annotations. Include @package, @author, @param, @return, @throws, @var, and @example annotations. Focus on API integration patterns and DTO usage examples.",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 8,
         "title": "Implement Fiat Deposit and Withdrawal Resources",
-        "description": "Create DepositResource and WithdrawResource for fiat operations with comprehensive PHPDoc documentation.",
+        "description": "Create DepositResource and WithdrawResource for fiat operations with comprehensive PHPDoc documentation, following proper SDK paradigm for XGATE API integration.",
         "status": "pending",
         "dependencies": [
           5,
@@ -338,47 +420,47 @@
           7
         ],
         "priority": "medium",
-        "details": "Implement DepositResource for listing currencies and creating deposits. Implement WithdrawResource for listing currencies and creating withdrawals. Use Transaction model for data. Validate input with Symfony Validator. Include complete PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for deposit and withdrawal operations. Use PHP 8.1+ types and detailed docblocks for transaction data structures and currency arrays.",
-        "testStrategy": "Test listing currencies and deposit/withdrawal creation using mocked API responses. Validate input validation rules, error handling, and model serialization with unit tests. Use mock HTTP responses to simulate all transaction scenarios. Verify PHPDoc quality and IDE autocompletion for transaction methods.",
+        "details": "Implement DepositResource for listing currencies and creating deposits. Implement WithdrawResource for listing currencies and creating withdrawals. Use TransactionDTO for data transport. Focus on HTTP operations and clean API interface. Include complete PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for deposit and withdrawal operations. Use PHP 8.1+ types and detailed docblocks for transaction data structures and currency arrays. Create clean interface for XGATE API fiat operations, not complex domain models.",
+        "testStrategy": "Test listing currencies and deposit/withdrawal creation using mocked API responses. Validate HTTP operations, error handling, and DTO serialization/deserialization with unit tests. Use mock HTTP responses to simulate all transaction scenarios. Verify PHPDoc quality and IDE autocompletion for transaction methods.",
         "subtasks": [
           {
             "id": 1,
             "title": "Implement DepositResource",
-            "description": "Develop the DepositResource class to handle deposit transactions, including currency listing, input validation, and error handling.",
-            "dependencies": [],
-            "details": "Create methods for receiving deposit requests, validating input data such as amount and currency, processing the deposit transaction, and returning appropriate responses with error handling using try-catch blocks.",
+            "description": "Develop the DepositResource class to handle deposit transactions via HTTP operations, including currency listing and clean API interface.",
             "status": "pending",
+            "dependencies": [],
+            "details": "Create methods for HTTP deposit requests, processing deposit operations through XGATE API, and returning appropriate responses with error handling using try-catch blocks. Focus on clean SDK interface for fiat deposit operations.",
             "testStrategy": ""
           },
           {
             "id": 2,
             "title": "Implement WithdrawResource",
-            "description": "Develop the WithdrawResource class to handle withdrawal transactions, including currency listing, input validation, and error handling.",
-            "dependencies": [],
-            "details": "Create methods for receiving withdrawal requests, validating input data such as amount and currency, processing the withdrawal transaction, and returning appropriate responses with error handling using try-catch blocks.",
+            "description": "Develop the WithdrawResource class to handle withdrawal transactions via HTTP operations, including currency listing and clean API interface.",
             "status": "pending",
+            "dependencies": [],
+            "details": "Create methods for HTTP withdrawal requests, processing withdrawal operations through XGATE API, and returning appropriate responses with error handling using try-catch blocks. Focus on clean SDK interface for fiat withdrawal operations.",
             "testStrategy": ""
           },
           {
             "id": 3,
-            "title": "Develop Transaction Model with Validation",
-            "description": "Create the Transaction model class that represents transactions and includes validation logic to ensure data integrity.",
-            "dependencies": [],
-            "details": "Define properties for transaction attributes (amount, currency, type, date, etc.), implement validation rules for these properties, and ensure secure handling of data to prevent invalid transactions. Use namespaces and adhere to PSR standards for maintainability.",
+            "title": "Develop TransactionDTO for Data Transport",
+            "description": "Create the TransactionDTO class as a simple data transfer object for transporting transaction data between API and client.",
             "status": "pending",
+            "dependencies": [],
+            "details": "Define properties for transaction attributes (amount, currency, type, date, etc.) with focus on serialization/deserialization. Remove domain validation logic - keep it simple for data transport. Use namespaces and adhere to PSR standards for maintainability.",
             "testStrategy": ""
           },
           {
             "id": 4,
             "title": "Write PHPDoc Documentation with Examples",
-            "description": "Document the DepositResource, WithdrawResource, and Transaction model classes using comprehensive PHPDoc comments including usage examples.",
+            "description": "Document the DepositResource, WithdrawResource, and TransactionDTO classes using comprehensive PHPDoc comments including usage examples.",
+            "status": "pending",
             "dependencies": [
               1,
               2,
               3
             ],
-            "details": "Add PHPDoc blocks to all classes, methods, and properties describing their purpose, parameters, return types, exceptions thrown, and provide example code snippets demonstrating typical usage scenarios. Follow PHPDoc standards for clarity and maintainability.",
-            "status": "pending",
+            "details": "Add PHPDoc blocks to all classes, methods, and properties describing their purpose, parameters, return types, exceptions thrown, and provide example code snippets demonstrating typical usage scenarios for XGATE API fiat operations. Follow PHPDoc standards for clarity and maintainability.",
             "testStrategy": ""
           }
         ]
@@ -532,7 +614,7 @@
     ],
     "metadata": {
       "created": "2025-06-30T14:55:19.383Z",
-      "updated": "2025-06-30T20:33:41.894Z",
+      "updated": "2025-06-30T20:34:10.622Z",
       "description": "Tasks for master context"
     }
   }

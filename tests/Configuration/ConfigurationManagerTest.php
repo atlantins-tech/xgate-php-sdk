@@ -399,3 +399,4 @@ class ConfigurationManagerTest extends TestCase
         }
     }
 }
+ 
