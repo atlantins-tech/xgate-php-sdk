@@ -5,672 +5,290 @@ declare(strict_types=1);
 namespace XGate\Model;
 
 use DateTimeImmutable;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Context\ExecutionContextInterface;
-use Symfony\Component\Validator\Mapping\ClassMetadata;
-use Symfony\Component\Validator\Validation;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use JsonSerializable;
 
 /**
- * Customer model representing a customer entity in the XGATE system
+ * Customer Data Transfer Object for XGATE API
  *
- * This model provides data representation and validation for customer
- * information including personal details, contact information, and
- * system metadata like creation and update timestamps.
+ * Simple DTO class for transporting customer data between the XGATE API
+ * and client applications. Provides JSON serialization/deserialization
+ * and basic type safety without complex domain validation.
  *
  * @package XGate\Model
  * @author XGate PHP SDK Contributors
  *
- * @example Basic customer creation
+ * @example Basic customer DTO usage
  * ```php
- * $customer = new Customer();
- * $customer->setName('João Silva')
- *          ->setEmail('joao@example.com')
- *          ->setDocument('12345678901')
- *          ->setPhone('+5511999999999');
+ * // Creating from API response
+ * $customerData = json_decode($apiResponse, true);
+ * $customer = Customer::fromArray($customerData);
  *
- * if ($customer->isValid()) {
- *     echo 'Customer data is valid';
- * }
- * ```
- *
- * @example Customer with validation errors
- * ```php
- * $customer = new Customer();
- * $customer->setEmail('invalid-email'); // Invalid email format
- *
- * $violations = $customer->getValidationErrors();
- * foreach ($violations as $violation) {
- *     echo $violation->getMessage();
- * }
+ * // Converting to API request
+ * $requestData = $customer->toArray();
  * ```
  */
-class Customer
+class Customer implements JsonSerializable
 {
     /**
      * Customer unique identifier
      *
-     * @var int|null Unique customer ID assigned by the system
+     * @var string|null
      */
-    private ?int $id = null;
+    public readonly ?string $id;
 
     /**
      * Customer full name
      *
-     * @var string|null Customer's full name (required, 2-100 characters)
+     * @var string
      */
-    private ?string $name = null;
+    public readonly string $name;
 
     /**
      * Customer email address
      *
-     * @var string|null Valid email address for communication (required)
+     * @var string
      */
-    private ?string $email = null;
-
-    /**
-     * Customer document number
-     *
-     * @var string|null Document number (CPF/CNPJ for Brazil, required)
-     */
-    private ?string $document = null;
+    public readonly string $email;
 
     /**
      * Customer phone number
      *
-     * @var string|null Phone number in international format (optional)
+     * @var string|null
      */
-    private ?string $phone = null;
+    public readonly ?string $phone;
+
+    /**
+     * Customer document number (CPF/CNPJ)
+     *
+     * @var string|null
+     */
+    public readonly ?string $document;
+
+    /**
+     * Customer document type (cpf, cnpj)
+     *
+     * @var string|null
+     */
+    public readonly ?string $documentType;
+
+    /**
+     * Customer status (active, inactive, blocked)
+     *
+     * @var string
+     */
+    public readonly string $status;
 
     /**
      * Customer creation timestamp
      *
-     * @var DateTimeImmutable|null When the customer was created in the system
+     * @var DateTimeImmutable|null
      */
-    private ?DateTimeImmutable $createdAt = null;
+    public readonly ?DateTimeImmutable $createdAt;
 
     /**
      * Customer last update timestamp
      *
-     * @var DateTimeImmutable|null When the customer was last updated
+     * @var DateTimeImmutable|null
      */
-    private ?DateTimeImmutable $updatedAt = null;
+    public readonly ?DateTimeImmutable $updatedAt;
 
     /**
-     * Validator instance for data validation
+     * Additional customer metadata
      *
-     * @var ValidatorInterface|null Symfony validator instance
+     * @var array<string, mixed>
      */
-    private ?ValidatorInterface $validator = null;
+    public readonly array $metadata;
 
     /**
-     * Create a new Customer instance
+     * Create new Customer DTO instance
      *
-     * @param array<string, mixed> $data Optional initial data to populate the customer
-     *
-     * @example
-     * ```php
-     * // Empty customer
-     * $customer = new Customer();
-     *
-     * // Customer with initial data
-     * $customer = new Customer([
-     *     'name' => 'João Silva',
-     *     'email' => 'joao@example.com',
-     *     'document' => '12345678901'
-     * ]);
-     * ```
+     * @param string|null $id Customer unique identifier
+     * @param string $name Customer full name
+     * @param string $email Customer email address
+     * @param string|null $phone Customer phone number
+     * @param string|null $document Customer document number
+     * @param string|null $documentType Customer document type
+     * @param string $status Customer status
+     * @param DateTimeImmutable|null $createdAt Customer creation timestamp
+     * @param DateTimeImmutable|null $updatedAt Customer update timestamp
+     * @param array<string, mixed> $metadata Additional customer metadata
      */
-    public function __construct(array $data = [])
-    {
-        $this->validator = Validation::createValidatorBuilder()
-            ->addMethodMapping('loadValidatorMetadata')
-            ->getValidator();
-
-        if (!empty($data)) {
-            $this->fromArray($data);
-        }
-    }
-
-    /**
-     * Get customer ID
-     *
-     * @return int|null Customer unique identifier
-     */
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set customer ID
-     *
-     * @param int|null $id Customer unique identifier
-     * @return self Returns self for method chaining
-     */
-    public function setId(?int $id): self
-    {
+    public function __construct(
+        ?string $id,
+        string $name,
+        string $email,
+        ?string $phone = null,
+        ?string $document = null,
+        ?string $documentType = null,
+        string $status = 'active',
+        ?DateTimeImmutable $createdAt = null,
+        ?DateTimeImmutable $updatedAt = null,
+        array $metadata = []
+    ) {
         $this->id = $id;
-        return $this;
+        $this->name = $name;
+        $this->email = $email;
+        $this->phone = $phone;
+        $this->document = $document;
+        $this->documentType = $documentType;
+        $this->status = $status;
+        $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
+        $this->metadata = $metadata;
     }
 
     /**
-     * Get customer name
+     * Create Customer DTO from array data (API response)
      *
-     * @return string|null Customer full name
-     */
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    /**
-     * Set customer name
+     * @param array<string, mixed> $data Customer data from API
+     * @return self Customer DTO instance
      *
-     * @param string|null $name Customer full name (2-100 characters)
-     * @return self Returns self for method chaining
-     *
-     * @example
+     * @example Creating from API response
      * ```php
-     * $customer->setName('João da Silva Santos');
+     * $apiResponse = ['id' => '123', 'name' => 'João Silva', 'email' => 'joao@example.com'];
+     * $customer = Customer::fromArray($apiResponse);
      * ```
      */
-    public function setName(?string $name): self
+    public static function fromArray(array $data): self
     {
-        $this->name = $name !== null ? trim($name) : null;
-        return $this;
+        return new self(
+            id: $data['id'] ?? null,
+            name: $data['name'] ?? '',
+            email: $data['email'] ?? '',
+            phone: $data['phone'] ?? null,
+            document: $data['document'] ?? null,
+            documentType: $data['document_type'] ?? null,
+            status: $data['status'] ?? 'active',
+            createdAt: isset($data['created_at']) ? new DateTimeImmutable($data['created_at']) : null,
+            updatedAt: isset($data['updated_at']) ? new DateTimeImmutable($data['updated_at']) : null,
+            metadata: $data['metadata'] ?? []
+        );
     }
 
     /**
-     * Get customer email
+     * Convert Customer DTO to array (for API requests)
      *
-     * @return string|null Customer email address
-     */
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    /**
-     * Set customer email
+     * @return array<string, mixed> Customer data as array
      *
-     * @param string|null $email Valid email address
-     * @return self Returns self for method chaining
-     *
-     * @example
+     * @example Converting to API request
      * ```php
-     * $customer->setEmail('joao.silva@example.com');
+     * $customer = new Customer(null, 'João Silva', 'joao@example.com');
+     * $requestData = $customer->toArray();
+     * // Send $requestData to API
      * ```
      */
-    public function setEmail(?string $email): self
-    {
-        $this->email = $email !== null ? strtolower(trim($email)) : null;
-        return $this;
-    }
-
-    /**
-     * Get customer document
-     *
-     * @return string|null Customer document number
-     */
-    public function getDocument(): ?string
-    {
-        return $this->document;
-    }
-
-    /**
-     * Set customer document
-     *
-     * @param string|null $document Document number (CPF/CNPJ)
-     * @return self Returns self for method chaining
-     *
-     * @example
-     * ```php
-     * $customer->setDocument('12345678901'); // CPF
-     * $customer->setDocument('12345678000195'); // CNPJ
-     * ```
-     */
-    public function setDocument(?string $document): self
-    {
-        $this->document = $document !== null ? preg_replace('/\D/', '', $document) : null;
-        return $this;
-    }
-
-    /**
-     * Get customer phone
-     *
-     * @return string|null Customer phone number
-     */
-    public function getPhone(): ?string
-    {
-        return $this->phone;
-    }
-
-    /**
-     * Set customer phone
-     *
-     * @param string|null $phone Phone number in international format
-     * @return self Returns self for method chaining
-     *
-     * @example
-     * ```php
-     * $customer->setPhone('+5511999999999');
-     * $customer->setPhone('11999999999'); // Will be normalized
-     * ```
-     */
-    public function setPhone(?string $phone): self
-    {
-        if ($phone !== null) {
-            // Remove all non-digit characters
-            $cleanPhone = preg_replace('/\D/', '', $phone);
-            
-            // Add country code if missing (assumes Brazil +55)
-            if ($cleanPhone !== null && strlen($cleanPhone) === 11 && !str_starts_with($cleanPhone, '55')) {
-                $cleanPhone = '55' . $cleanPhone;
-            }
-            
-            $this->phone = $cleanPhone !== null ? '+' . $cleanPhone : null;
-        } else {
-            $this->phone = null;
-        }
-        
-        return $this;
-    }
-
-    /**
-     * Get customer creation timestamp
-     *
-     * @return DateTimeImmutable|null When the customer was created
-     */
-    public function getCreatedAt(): ?DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    /**
-     * Set customer creation timestamp
-     *
-     * @param DateTimeImmutable|string|null $createdAt Creation timestamp
-     * @return self Returns self for method chaining
-     */
-    public function setCreatedAt(DateTimeImmutable|string|null $createdAt): self
-    {
-        if (is_string($createdAt)) {
-            $this->createdAt = new DateTimeImmutable($createdAt);
-        } else {
-            $this->createdAt = $createdAt;
-        }
-        return $this;
-    }
-
-    /**
-     * Get customer last update timestamp
-     *
-     * @return DateTimeImmutable|null When the customer was last updated
-     */
-    public function getUpdatedAt(): ?DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    /**
-     * Set customer last update timestamp
-     *
-     * @param DateTimeImmutable|string|null $updatedAt Last update timestamp
-     * @return self Returns self for method chaining
-     */
-    public function setUpdatedAt(DateTimeImmutable|string|null $updatedAt): self
-    {
-        if (is_string($updatedAt)) {
-            $this->updatedAt = new DateTimeImmutable($updatedAt);
-        } else {
-            $this->updatedAt = $updatedAt;
-        }
-        return $this;
-    }
-
-    /**
-     * Validate customer data
-     *
-     * @return bool True if all validation rules pass
-     *
-     * @example
-     * ```php
-     * if ($customer->isValid()) {
-     *     echo 'Customer data is valid';
-     * } else {
-     *     $errors = $customer->getValidationErrors();
-     *     foreach ($errors as $error) {
-     *         echo $error->getMessage();
-     *     }
-     * }
-     * ```
-     */
-    public function isValid(): bool
-    {
-        if ($this->validator === null) {
-            return false;
-        }
-
-        $violations = $this->validator->validate($this);
-        return count($violations) === 0;
-    }
-
-    /**
-     * Get validation errors
-     *
-     * @return \Symfony\Component\Validator\ConstraintViolationListInterface List of validation violations
-     */
-    public function getValidationErrors()
-    {
-        if ($this->validator === null) {
-            return [];
-        }
-
-        return $this->validator->validate($this);
-    }
-
-    /**
-     * Convert customer to array representation
-     *
-     * @param bool $includeTimestamps Whether to include created_at and updated_at
-     * @return array<string, mixed> Customer data as associative array
-     *
-     * @example
-     * ```php
-     * $data = $customer->toArray();
-     * // Returns: ['id' => 1, 'name' => 'João', 'email' => 'joao@example.com', ...]
-     *
-     * $dataWithoutTimestamps = $customer->toArray(false);
-     * // Returns: ['id' => 1, 'name' => 'João', 'email' => 'joao@example.com', ...]
-     * ```
-     */
-    public function toArray(bool $includeTimestamps = true): array
+    public function toArray(): array
     {
         $data = [
-            'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'document' => $this->document,
-            'phone' => $this->phone,
+            'status' => $this->status,
         ];
 
-        if ($includeTimestamps) {
-            $data['created_at'] = $this->createdAt?->format('Y-m-d\TH:i:s\Z');
-            $data['updated_at'] = $this->updatedAt?->format('Y-m-d\TH:i:s\Z');
+        if ($this->id !== null) {
+            $data['id'] = $this->id;
+        }
+
+        if ($this->phone !== null) {
+            $data['phone'] = $this->phone;
+        }
+
+        if ($this->document !== null) {
+            $data['document'] = $this->document;
+        }
+
+        if ($this->documentType !== null) {
+            $data['document_type'] = $this->documentType;
+        }
+
+        if ($this->createdAt !== null) {
+            $data['created_at'] = $this->createdAt->format('c');
+        }
+
+        if ($this->updatedAt !== null) {
+            $data['updated_at'] = $this->updatedAt->format('c');
+        }
+
+        if (!empty($this->metadata)) {
+            $data['metadata'] = $this->metadata;
         }
 
         return $data;
     }
 
     /**
-     * Populate customer from array data
+     * JSON serialization for API communication
      *
-     * @param array<string, mixed> $data Customer data
-     * @return self Returns self for method chaining
-     *
-     * @example
-     * ```php
-     * $customer->fromArray([
-     *     'name' => 'João Silva',
-     *     'email' => 'joao@example.com',
-     *     'document' => '12345678901'
-     * ]);
-     * ```
+     * @return array<string, mixed> Data for JSON encoding
      */
-    public function fromArray(array $data): self
+    public function jsonSerialize(): array
     {
-        if (isset($data['id'])) {
-            $this->setId((int) $data['id']);
-        }
-
-        if (isset($data['name'])) {
-            $this->setName((string) $data['name']);
-        }
-
-        if (isset($data['email'])) {
-            $this->setEmail((string) $data['email']);
-        }
-
-        if (isset($data['document'])) {
-            $this->setDocument((string) $data['document']);
-        }
-
-        if (isset($data['phone'])) {
-            $this->setPhone((string) $data['phone']);
-        }
-
-        if (isset($data['created_at'])) {
-            $this->setCreatedAt($data['created_at']);
-        }
-
-        if (isset($data['updated_at'])) {
-            $this->setUpdatedAt($data['updated_at']);
-        }
-
-        return $this;
+        return $this->toArray();
     }
 
     /**
-     * Convert customer to JSON string
+     * Create Customer DTO from JSON string
      *
-     * @param bool $includeTimestamps Whether to include timestamps
-     * @return string JSON representation of customer data
-     * @throws \JsonException If JSON encoding fails
+     * @param string $json JSON string from API
+     * @return self Customer DTO instance
+     * @throws \JsonException If JSON is invalid
      *
-     * @example
+     * @example Creating from JSON response
      * ```php
-     * $json = $customer->toJson();
-     * echo $json; // {"id":1,"name":"João","email":"joao@example.com",...}
-     * ```
-     */
-    public function toJson(bool $includeTimestamps = true): string
-    {
-        return json_encode($this->toArray($includeTimestamps), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-    }
-
-    /**
-     * Create customer from JSON string
-     *
-     * @param string $json JSON string containing customer data
-     * @return self New customer instance
-     * @throws \JsonException If JSON decoding fails
-     *
-     * @example
-     * ```php
-     * $json = '{"name":"João","email":"joao@example.com"}';
-     * $customer = Customer::fromJson($json);
+     * $jsonResponse = '{"id":"123","name":"João Silva","email":"joao@example.com"}';
+     * $customer = Customer::fromJson($jsonResponse);
      * ```
      */
     public static function fromJson(string $json): self
     {
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        return new self($data);
+        return self::fromArray($data);
     }
 
     /**
-     * Load validation metadata for Symfony Validator
+     * Convert Customer DTO to JSON string
      *
-     * @param ClassMetadata $metadata Validation metadata object
-     * @return void
+     * @return string JSON representation
+     * @throws \JsonException If encoding fails
+     *
+     * @example Converting to JSON
+     * ```php
+     * $customer = new Customer(null, 'João Silva', 'joao@example.com');
+     * $json = $customer->toJson();
+     * ```
      */
-    public static function loadValidatorMetadata(ClassMetadata $metadata): void
+    public function toJson(): string
     {
-        // Name validation
-        $metadata->addPropertyConstraint('name', new Assert\NotBlank([
-            'message' => 'O nome é obrigatório'
-        ]));
-        $metadata->addPropertyConstraint('name', new Assert\Length([
-            'min' => 2,
-            'max' => 100,
-            'minMessage' => 'O nome deve ter pelo menos {{ limit }} caracteres',
-            'maxMessage' => 'O nome não pode ter mais de {{ limit }} caracteres'
-        ]));
-
-        // Email validation
-        $metadata->addPropertyConstraint('email', new Assert\NotBlank([
-            'message' => 'O email é obrigatório'
-        ]));
-        $metadata->addPropertyConstraint('email', new Assert\Email([
-            'message' => 'O email "{{ value }}" não é válido'
-        ]));
-
-        // Document validation
-        $metadata->addPropertyConstraint('document', new Assert\NotBlank([
-            'message' => 'O documento é obrigatório'
-        ]));
-        $metadata->addPropertyConstraint('document', new Assert\Callback([
-            'callback' => [self::class, 'validateDocument']
-        ]));
-
-        // Phone validation (optional)
-        $metadata->addPropertyConstraint('phone', new Assert\Callback([
-            'callback' => [self::class, 'validatePhone']
-        ]));
+        return json_encode($this, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
     }
 
     /**
-     * Validate Brazilian document (CPF or CNPJ)
+     * Check if customer has valid email format
      *
-     * @param string|null $document Document to validate
-     * @param ExecutionContextInterface $context Validation context
-     * @return void
+     * @return bool True if email is valid
      */
-    public static function validateDocument(?string $document, ExecutionContextInterface $context): void
+    public function hasValidEmail(): bool
     {
-        if ($document === null || $document === '') {
-            return; // NotBlank constraint will handle this
-        }
-
-        $cleanDocument = preg_replace('/\D/', '', $document);
-        
-        if ($cleanDocument === null) {
-            $context->buildViolation('Documento inválido')
-                ->addViolation();
-            return;
-        }
-
-        $length = strlen($cleanDocument);
-
-        if ($length === 11) {
-            // CPF validation
-            if (!self::isValidCPF($cleanDocument)) {
-                $context->buildViolation('CPF inválido')
-                    ->addViolation();
-            }
-        } elseif ($length === 14) {
-            // CNPJ validation
-            if (!self::isValidCNPJ($cleanDocument)) {
-                $context->buildViolation('CNPJ inválido')
-                    ->addViolation();
-            }
-        } else {
-            $context->buildViolation('Documento deve ser um CPF (11 dígitos) ou CNPJ (14 dígitos)')
-                ->addViolation();
-        }
+        return filter_var($this->email, FILTER_VALIDATE_EMAIL) !== false;
     }
 
     /**
-     * Validate phone number format
+     * Check if customer is active
      *
-     * @param string|null $phone Phone number to validate
-     * @param ExecutionContextInterface $context Validation context
-     * @return void
+     * @return bool True if customer status is active
      */
-    public static function validatePhone(?string $phone, ExecutionContextInterface $context): void
+    public function isActive(): bool
     {
-        if ($phone === null || $phone === '') {
-            return; // Phone is optional
-        }
-
-        $cleanPhone = preg_replace('/\D/', '', $phone);
-        
-        if ($cleanPhone === null) {
-            $context->buildViolation('Telefone inválido')
-                ->addViolation();
-            return;
-        }
-
-        $length = strlen($cleanPhone);
-
-        // Accept Brazilian phone numbers with or without country code
-        if ($length !== 10 && $length !== 11 && $length !== 12 && $length !== 13) {
-            $context->buildViolation('Telefone deve ter formato válido (10-13 dígitos)')
-                ->addViolation();
-        }
+        return $this->status === 'active';
     }
 
     /**
-     * Validate Brazilian CPF
+     * Get customer display name for UI
      *
-     * @param string $cpf CPF to validate (digits only)
-     * @return bool True if CPF is valid
+     * @return string Customer name or email if name is empty
      */
-    private static function isValidCPF(string $cpf): bool
+    public function getDisplayName(): string
     {
-        // Check for known invalid CPFs
-        if (preg_match('/(\d)\1{10}/', $cpf)) {
-            return false;
-        }
-
-        // Calculate first verification digit
-        $sum = 0;
-        for ($i = 0; $i < 9; $i++) {
-            $sum += (int) $cpf[$i] * (10 - $i);
-        }
-        $remainder = $sum % 11;
-        $digit1 = $remainder < 2 ? 0 : 11 - $remainder;
-
-        if ((int) $cpf[9] !== $digit1) {
-            return false;
-        }
-
-        // Calculate second verification digit
-        $sum = 0;
-        for ($i = 0; $i < 10; $i++) {
-            $sum += (int) $cpf[$i] * (11 - $i);
-        }
-        $remainder = $sum % 11;
-        $digit2 = $remainder < 2 ? 0 : 11 - $remainder;
-
-        return (int) $cpf[10] === $digit2;
-    }
-
-    /**
-     * Validate Brazilian CNPJ
-     *
-     * @param string $cnpj CNPJ to validate (digits only)
-     * @return bool True if CNPJ is valid
-     */
-    private static function isValidCNPJ(string $cnpj): bool
-    {
-        // Check for known invalid CNPJs
-        if (preg_match('/(\d)\1{13}/', $cnpj)) {
-            return false;
-        }
-
-        // Calculate first verification digit
-        $weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-        $sum = 0;
-        for ($i = 0; $i < 12; $i++) {
-            $sum += (int) $cnpj[$i] * $weights1[$i];
-        }
-        $remainder = $sum % 11;
-        $digit1 = $remainder < 2 ? 0 : 11 - $remainder;
-
-        if ((int) $cnpj[12] !== $digit1) {
-            return false;
-        }
-
-        // Calculate second verification digit
-        $weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-        $sum = 0;
-        for ($i = 0; $i < 13; $i++) {
-            $sum += (int) $cnpj[$i] * $weights2[$i];
-        }
-        $remainder = $sum % 11;
-        $digit2 = $remainder < 2 ? 0 : 11 - $remainder;
-
-        return (int) $cnpj[13] === $digit2;
+        return !empty($this->name) ? $this->name : $this->email;
     }
 } 

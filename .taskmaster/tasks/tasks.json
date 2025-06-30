@@ -304,7 +304,7 @@
         "id": 6,
         "title": "Implement Customer Resource and Model",
         "description": "Develop CustomerResource for API client management and CustomerDTO for data transfer with comprehensive PHPDoc documentation. Create a clean interface for working with XGATE API customer data.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           5
         ],
@@ -316,7 +316,7 @@
             "id": 1,
             "title": "Create CustomerDTO for Data Transfer",
             "description": "Implement the CustomerDTO class as a simple data transfer object for API communication",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "details": "Create CustomerDTO with properties (id, name, email, phone, address) as a simple data container. Implement JSON serialization/deserialization methods, basic type checking, and data standardization. Focus on clean data transport between API and client without complex business logic or validation rules.",
             "testStrategy": ""
@@ -325,7 +325,7 @@
             "id": 2,
             "title": "Implement CustomerResource CRUD Methods",
             "description": "Develop the CustomerResource class with full CRUD API methods including proper HTTP response handling",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1
             ],
@@ -336,7 +336,7 @@
             "id": 3,
             "title": "Add PHPDoc Documentation with SDK Examples",
             "description": "Create comprehensive PHPDoc documentation for CustomerDTO and CustomerResource with SDK usage examples",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1,
               2
@@ -348,7 +348,7 @@
             "id": 4,
             "title": "Implement Testing Suite for Customer SDK Components",
             "description": "Create unit and integration tests for CustomerDTO serialization and CustomerResource API methods",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1,
               2
@@ -362,7 +362,7 @@
         "id": 7,
         "title": "Develop Pix Resource and Key Model",
         "description": "Build PixResource for PIX key management HTTP operations and PixKeyDTO for data transfer with complete PHPDoc documentation.",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           5,
           6
@@ -375,7 +375,7 @@
             "id": 1,
             "title": "Create PixKeyDTO class",
             "description": "Implement PixKeyDTO as a simple Data Transfer Object for PIX key data transport",
-            "status": "pending",
+            "status": "in-progress",
             "dependencies": [],
             "details": "Create PixKeyDTO class focused on data transport without domain validation. Include properties for PIX key data (key, type, account info). Implement JSON serialization/deserialization methods. Add comprehensive PHPDoc with property descriptions and usage examples.",
             "testStrategy": ""
@@ -614,7 +614,7 @@
     ],
     "metadata": {
       "created": "2025-06-30T14:55:19.383Z",
-      "updated": "2025-06-30T20:34:10.622Z",
+      "updated": "2025-06-30T20:58:31.953Z",
       "description": "Tasks for master context"
     }
   }
