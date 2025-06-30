@@ -8,15 +8,15 @@ use Exception;
 
 /**
  * Classe base para todas as exceções do SDK XGATE
- * 
+ *
  * Esta é a classe pai de todas as exceções específicas do SDK,
  * permitindo capturar qualquer erro relacionado ao XGATE com
  * um único catch.
- * 
+ *
  * @package XGate\Exception
  * @author XGate PHP SDK Contributors
  * @version 1.0.0
- * 
+ *
  * @example
  * ```php
  * try {
@@ -32,14 +32,14 @@ abstract class XGateException extends Exception
 {
     /**
      * Contexto adicional da exceção
-     * 
+     *
      * @var array<string, mixed>
      */
     protected array $context = [];
 
     /**
      * Construtor da XGateException
-     * 
+     *
      * @param string $message Mensagem de erro
      * @param int $code Código do erro
      * @param \Throwable|null $previous Exceção anterior na cadeia
@@ -57,7 +57,7 @@ abstract class XGateException extends Exception
 
     /**
      * Obtém o contexto adicional da exceção
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getContext(): array
@@ -67,19 +67,20 @@ abstract class XGateException extends Exception
 
     /**
      * Define o contexto adicional da exceção
-     * 
+     *
      * @param array<string, mixed> $context
      * @return static
      */
     public function setContext(array $context): static
     {
         $this->context = $context;
+
         return $this;
     }
 
     /**
      * Adiciona item ao contexto
-     * 
+     *
      * @param string $key
      * @param mixed $value
      * @return static
@@ -87,12 +88,13 @@ abstract class XGateException extends Exception
     public function addContext(string $key, mixed $value): static
     {
         $this->context[$key] = $value;
+
         return $this;
     }
 
     /**
      * Obtém informações básicas da exceção para logging
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getLogData(): array
@@ -114,14 +116,14 @@ abstract class XGateException extends Exception
 
     /**
      * Converte a exceção para array (implementação padrão)
-     * 
+     *
      * Subclasses devem sobrescrever este método para fornecer
      * informações mais específicas.
-     * 
+     *
      * @return array<string, mixed>
      */
     public function toArray(): array
     {
         return $this->getLogData();
     }
-} 
+}

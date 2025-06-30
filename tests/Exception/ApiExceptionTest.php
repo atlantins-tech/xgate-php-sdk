@@ -113,7 +113,7 @@ class ApiExceptionTest extends TestCase
         $exception = new ApiException('Validation error', 422, null, $jsonResponse);
 
         $responseArray = $exception->getResponseBodyAsArray();
-        
+
         $this->assertIsArray($responseArray);
         $this->assertEquals('Validation failed', $responseArray['error']);
         $this->assertIsArray($responseArray['details']);
@@ -128,7 +128,7 @@ class ApiExceptionTest extends TestCase
         $exception = new ApiException('Server error', 500, null, 'Internal Server Error');
 
         $responseArray = $exception->getResponseBodyAsArray();
-        
+
         $this->assertNull($responseArray);
     }
 
@@ -140,7 +140,7 @@ class ApiExceptionTest extends TestCase
         $exception = new ApiException('Empty response', 204, null, '');
 
         $responseArray = $exception->getResponseBodyAsArray();
-        
+
         $this->assertNull($responseArray);
     }
 
@@ -185,4 +185,4 @@ class ApiExceptionTest extends TestCase
         $this->assertEquals('', $exception->getResponseBody());
         $this->assertNull($exception->getPrevious());
     }
-} 
+}

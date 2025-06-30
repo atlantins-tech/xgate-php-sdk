@@ -11,15 +11,15 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use PHPUnit\Framework\TestCase;
 use Monolog\Handler\TestHandler;
 use Monolog\Logger;
+use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use XGate\Configuration\ConfigurationManager;
 use XGate\Exception\ApiException;
 use XGate\Exception\NetworkException;
 use XGate\Http\HttpClient;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * Testes para o HttpClient
@@ -58,10 +58,10 @@ class HttpClientTest extends TestCase
         // Mock handler para simular respostas
         $this->mockHandler = new MockHandler();
         $handlerStack = HandlerStack::create($this->mockHandler);
-        
+
         // HttpClient sem cliente personalizado para permitir middleware
         $this->httpClient = new HttpClient($this->config, $this->logger);
-        
+
         // Substitui o handler do cliente criado pelo HttpClient
         $guzzleClient = $this->httpClient->getGuzzleClient();
         if ($guzzleClient instanceof Client) {
@@ -76,13 +76,13 @@ class HttpClientTest extends TestCase
                     'User-Agent' => 'XGATE-PHP-SDK/1.0.0',
                 ], $this->config->getCustomHeaders()),
             ];
-            
+
             // Adiciona os middlewares necessários
             $handlerStack->push($this->createLoggingMiddleware(), 'logging');
             $handlerStack->push($this->createErrorHandlingMiddleware(), 'error_handling');
-            
+
             $mockClient = new Client($clientConfig);
-            
+
             // Substitui o cliente no HttpClient usando reflexão
             $reflection = new \ReflectionClass($this->httpClient);
             $clientProperty = $reflection->getProperty('client');
@@ -105,7 +105,7 @@ class HttpClientTest extends TestCase
     public function testConstructorWithValidConfiguration(): void
     {
         $httpClient = new HttpClient($this->config, $this->logger);
-        
+
         $this->assertInstanceOf(HttpClient::class, $httpClient);
         $this->assertNotNull($httpClient->getGuzzleClient());
     }
@@ -136,7 +136,7 @@ class HttpClientTest extends TestCase
         );
 
         $response = $this->httpClient->post('/users', [
-            'json' => ['name' => 'João', 'email' => 'joao@example.com']
+            'json' => ['name' => 'João', 'email' => 'joao@example.com'],
         ]);
 
         $this->assertEquals(201, $response->getStatusCode());
@@ -153,7 +153,7 @@ class HttpClientTest extends TestCase
         );
 
         $response = $this->httpClient->put('/users/123', [
-            'json' => ['name' => 'João Silva']
+            'json' => ['name' => 'João Silva'],
         ]);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -184,7 +184,7 @@ class HttpClientTest extends TestCase
         );
 
         $response = $this->httpClient->patch('/users/123', [
-            'json' => ['status' => 'active']
+            'json' => ['status' => 'active'],
         ]);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -226,6 +226,7 @@ class HttpClientTest extends TestCase
             $this->assertTrue($e->isNotFoundError());
             $this->assertTrue($e->isClientError());
             $this->assertFalse($e->isServerError());
+
             throw $e;
         }
     }
@@ -247,6 +248,7 @@ class HttpClientTest extends TestCase
             $this->assertEquals(401, $e->getStatusCode());
             $this->assertTrue($e->isAuthenticationError());
             $this->assertTrue($e->isClientError());
+
             throw $e;
         }
     }
@@ -267,6 +269,7 @@ class HttpClientTest extends TestCase
         } catch (ApiException $e) {
             $this->assertEquals(403, $e->getStatusCode());
             $this->assertTrue($e->isAuthorizationError());
+
             throw $e;
         }
     }
@@ -291,6 +294,7 @@ class HttpClientTest extends TestCase
         } catch (ApiException $e) {
             $this->assertEquals(429, $e->getStatusCode());
             $this->assertTrue($e->isRateLimitError());
+
             throw $e;
         }
     }
@@ -312,6 +316,7 @@ class HttpClientTest extends TestCase
             $this->assertEquals(500, $e->getStatusCode());
             $this->assertTrue($e->isServerError());
             $this->assertFalse($e->isClientError());
+
             throw $e;
         }
     }
@@ -338,6 +343,7 @@ class HttpClientTest extends TestCase
             $this->assertTrue($e->isTimeoutError());
             $this->assertTrue($e->isRetryable());
             $this->assertStringContainsString('timeout', $e->getSuggestion());
+
             throw $e;
         }
     }
@@ -355,7 +361,7 @@ class HttpClientTest extends TestCase
 
         // Verifica se logs foram registrados
         $this->assertTrue($this->testHandler->hasDebugRecords());
-        
+
         $debugRecords = $this->testHandler->getRecords();
         $requestLog = null;
         $responseLog = null;
@@ -370,7 +376,7 @@ class HttpClientTest extends TestCase
 
         $this->assertNotNull($requestLog);
         $this->assertNotNull($responseLog);
-        
+
         // Verifica conteúdo do log de requisição
         $this->assertIsArray($requestLog['context']);
         $requestContext = $requestLog['context'];
@@ -399,21 +405,22 @@ class HttpClientTest extends TestCase
                 'Authorization' => 'Bearer secret-token',
                 'X-API-Key' => 'api-key-123',
                 'Content-Type' => 'application/json',
-            ]
+            ],
         ]);
 
         $this->assertTrue($this->testHandler->hasDebugRecords());
-        
+
         $requestLog = null;
         foreach ($this->testHandler->getRecords() as $record) {
             if ($record['message'] === 'HTTP Request') {
                 $requestLog = $record;
+
                 break;
             }
         }
 
         $this->assertNotNull($requestLog);
-        
+
         // Headers sensíveis devem estar mascarados
         $this->assertIsArray($requestLog['context']);
         $requestContext = $requestLog['context'];
@@ -435,8 +442,8 @@ class HttpClientTest extends TestCase
             'json' => [
                 'username' => 'user@example.com',
                 'password' => 'secret123',
-                'api_key' => 'key123'
-            ]
+                'api_key' => 'key123',
+            ],
         ]);
 
         $this->assertTrue($this->testHandler->hasDebugRecords());
@@ -464,7 +471,7 @@ class HttpClientTest extends TestCase
     public function testApiExceptionJsonResponse(): void
     {
         $jsonResponse = '{"error": "Validation failed", "details": ["Name is required"]}';
-        
+
         $this->mockHandler->append(
             new Response(422, [], $jsonResponse)
         );
@@ -478,6 +485,7 @@ class HttpClientTest extends TestCase
             $this->assertIsArray($responseArray);
             $this->assertEquals('Validation failed', $responseArray['error']);
             $this->assertIsArray($responseArray['details']);
+
             throw $e;
         }
     }
@@ -498,6 +506,7 @@ class HttpClientTest extends TestCase
         } catch (ApiException $e) {
             $this->assertNull($e->getResponseBodyAsArray());
             $this->assertEquals('Internal Server Error', $e->getResponseBody());
+
             throw $e;
         }
     }
@@ -516,7 +525,7 @@ class HttpClientTest extends TestCase
         // Cria novo logger para este teste
         $testHandler = new TestHandler();
         $logger = new Logger('test', [$testHandler]);
-        
+
         // Cria novo mock handler
         $mockHandler = new MockHandler();
         $handlerStack = HandlerStack::create($mockHandler);
@@ -540,7 +549,7 @@ class HttpClientTest extends TestCase
     public function testGetGuzzleClient(): void
     {
         $guzzleClient = $this->httpClient->getGuzzleClient();
-        
+
         $this->assertNotNull($guzzleClient);
         $this->assertInstanceOf(\GuzzleHttp\ClientInterface::class, $guzzleClient);
     }
@@ -570,13 +579,14 @@ class HttpClientTest extends TestCase
                                 'body' => $this->sanitizeBody((string) $response->getBody()),
                             ]);
                         }
+
                         return $response;
                     }
                 );
             };
         };
     }
-    
+
     /**
      * Cria middleware para tratamento de erros HTTP (para testes)
      */
@@ -593,6 +603,7 @@ class HttpClientTest extends TestCase
                                 'body' => (string) $response->getBody(),
                             ]);
                         }
+
                         return $response;
                     },
                     function ($reason) {
@@ -600,13 +611,14 @@ class HttpClientTest extends TestCase
                         if ($reason instanceof RequestException) {
                             $this->handleRequestException($reason);
                         }
+
                         throw $reason;
                     }
                 );
             };
         };
     }
-    
+
     /**
      * Trata exceções de requisição do Guzzle (para testes)
      */
@@ -643,7 +655,7 @@ class HttpClientTest extends TestCase
             $e
         );
     }
-    
+
     /**
      * Remove informações sensíveis dos headers para logging (para testes)
      */
@@ -662,7 +674,7 @@ class HttpClientTest extends TestCase
 
         return $sanitized;
     }
-    
+
     /**
      * Remove informações sensíveis do body para logging (para testes)
      */
@@ -685,4 +697,4 @@ class HttpClientTest extends TestCase
         // Se não é JSON válido, limita o tamanho
         return strlen($body) > 1000 ? substr($body, 0, 1000) . '...[truncated]' : $body;
     }
-} 
+}

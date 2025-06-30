@@ -226,4 +226,4 @@ class NetworkExceptionTest extends TestCase
         $exception = new NetworkException('SSL Certificate Error');
         $this->assertTrue($exception->isSslError());
     }
-} 
+}

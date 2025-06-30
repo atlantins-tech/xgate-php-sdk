@@ -103,14 +103,14 @@ class ConfigurationManager
 
     /**
      * URL do proxy
-     * 
+     *
      * @var string|null
      */
     private ?string $proxyUrl = null;
 
     /**
      * Autenticação do proxy (username:password)
-     * 
+     *
      * @var string|null
      */
     private ?string $proxyAuth = null;
@@ -372,50 +372,55 @@ class ConfigurationManager
     public function getProxySettings(): array
     {
         $this->ensureValidated();
+
         return $this->proxySettings;
     }
 
     /**
      * Retorna o número de tentativas de retry
-     * 
+     *
      * @return int
      */
     public function getRetryAttempts(): int
     {
         $this->ensureValidated();
+
         return $this->maxRetries;
     }
 
     /**
      * Retorna os headers personalizados
-     * 
+     *
      * @return array<string, string>
      */
     public function getHeaders(): array
     {
         $this->ensureValidated();
+
         return $this->customHeaders;
     }
 
     /**
      * Retorna a URL do proxy
-     * 
+     *
      * @return string|null
      */
     public function getProxyUrl(): ?string
     {
         $this->ensureValidated();
+
         return $this->proxyUrl;
     }
 
     /**
      * Retorna as credenciais de autenticação do proxy
-     * 
+     *
      * @return string|null
      */
     public function getProxyAuth(): ?string
     {
         $this->ensureValidated();
+
         return $this->proxyAuth;
     }
 
