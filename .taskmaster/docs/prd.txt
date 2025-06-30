@@ -1,0 +1,462 @@
+# Overview
+O XGATE PHP SDK é uma biblioteca PHP que facilita a integração com a API da XGATE Global, uma plataforma de pagamentos que oferece soluções para depósitos, saques e conversões entre moedas fiduciárias e criptomoedas. Este SDK visa simplificar o desenvolvimento de aplicações PHP que necessitam integrar-se com os serviços da XGATE, fornecendo uma interface intuitiva, bem documentada e seguindo as melhores práticas de desenvolvimento PHP.
+
+O SDK resolve o problema de integração complexa com APIs de pagamento, oferecendo uma abstração limpa sobre os endpoints da XGATE, tratamento robusto de erros, validação de dados e suporte completo às funcionalidades da plataforma. É destinado a desenvolvedores PHP que precisam implementar soluções de pagamento em suas aplicações.
+
+# Core Features
+
+## 1. Autenticação e Segurança
+- **Gerenciamento de Token Simples**: Autenticação via email/password retornando token de acesso
+- **Configuração Segura**: Armazenamento seguro de credenciais (email/senha)
+- **Rate Limiting**: Controle de requisições para evitar bloqueios
+- **Tratamento de Erros de Autenticação**: Exceções específicas para problemas de autenticação
+
+## 2. Gestão de Clientes
+- **Criação de Clientes**: Registro de novos clientes na plataforma
+- **Consulta de Clientes**: Busca de informações de clientes existentes
+- **Validação de Dados**: Validação de CPF, email e outros dados obrigatórios
+- **Tratamento de Duplicatas**: Gerenciamento de clientes já existentes
+
+## 3. Sistema PIX
+- **Gerenciamento de Chaves PIX**: Criação e consulta de chaves PIX
+- **Tipos de Chave Suportados**: CPF, CNPJ, email, telefone e chave aleatória
+- **Validação de Chaves**: Validação automática baseada no tipo de chave
+- **Consulta de Chaves**: Listagem de chaves PIX por cliente
+
+## 4. Operações FIAT (Moeda Fiduciária)
+- **Depósitos**: Criação de ordens de depósito em moeda fiduciária
+- **Saques**: Processamento de saques via PIX
+- **Consulta de Moedas**: Listagem de moedas fiduciárias disponíveis
+- **Histórico de Transações**: Consulta de histórico de operações
+
+## 5. Operações Cripto
+- **Carteiras**: Consulta de carteiras de criptomoedas dos clientes
+- **Saques Cripto**: Processamento de saques para carteiras externas
+- **Redes Blockchain**: Suporte a múltiplas redes (BEP-20, ERC-20, etc.)
+- **Criptomoedas Suportadas**: USDT, USDC e outras moedas disponíveis
+
+## 6. Sistema de Conversões
+- **Cotações**: Consulta de taxas de conversão em tempo real
+- **Conversões**: Processamento de conversões entre moedas
+- **Histórico de Cotações**: Consulta de histórico de taxas
+
+# User Experience
+
+## User Personas
+- **Desenvolvedor Backend PHP**: Profissional experiente que precisa integrar pagamentos
+- **Desenvolvedor Full-stack**: Desenvolvedor que trabalha com aplicações web completas
+- **Arquiteto de Software**: Profissional responsável por decisões técnicas em projetos
+
+## Key User Flows
+
+### Fluxo 1: Configuração Inicial
+1. Instalação via Composer
+2. Configuração de credenciais
+3. Teste de conectividade
+4. Primeiro depósito de teste
+
+### Fluxo 2: Operação de Depósito
+1. Autenticação automática
+2. Criação/validação do cliente
+3. Consulta de moedas disponíveis
+4. Criação da ordem de depósito
+5. Retorno dos dados de pagamento
+
+### Fluxo 3: Operação de Saque
+1. Validação do cliente e saldo
+2. Configuração/validação da chave PIX
+3. Criação da ordem de saque
+4. Confirmação e processamento
+
+## UI/UX Considerations
+- **API Intuitiva**: Métodos com nomes claros e parâmetros bem definidos
+- **Documentação Rica**: Exemplos práticos e documentação detalhada
+- **Tratamento de Erros**: Mensagens de erro claras e acionáveis
+- **Autocompletar IDE**: Suporte completo a PHPDoc para melhor experiência de desenvolvimento
+
+# Technical Architecture
+
+## System Components
+
+### Core Classes
+- **XGateClient**: Classe principal do SDK
+- **AuthenticationManager**: Gerenciamento de autenticação e tokens
+- **HttpClient**: Wrapper para requisições HTTP usando Guzzle
+- **ConfigurationManager**: Gerenciamento de configurações
+
+### Resource Classes
+- **CustomerResource**: Operações relacionadas a clientes
+- **PixResource**: Operações PIX (chaves e transações)
+- **DepositResource**: Operações de depósito
+- **WithdrawResource**: Operações de saque
+- **CryptoResource**: Operações com criptomoedas
+- **ConversionResource**: Operações de conversão
+
+### Model Classes (DTOs)
+- **Customer**: Modelo de cliente
+- **PixKey**: Modelo de chave PIX
+- **Transaction**: Modelo de transação
+- **Currency**: Modelo de moeda
+- **Wallet**: Modelo de carteira cripto
+- **ConversionRate**: Modelo de taxa de conversão
+
+### Exception Classes
+- **XGateException**: Exceção base do SDK
+- **AuthenticationException**: Erros de autenticação
+- **ValidationException**: Erros de validação
+- **ApiException**: Erros da API
+- **RateLimitException**: Erros de rate limiting
+- **NetworkException**: Erros de rede
+
+## Data Models
+
+### Customer Model
+```php
+class Customer {
+    public string $id;
+    public string $name;
+    public string $email;
+    public string $document; // CPF/CNPJ
+    public string $phone;
+    public DateTime $createdAt;
+    public DateTime $updatedAt;
+}
+```
+
+### Transaction Model
+```php
+class Transaction {
+    public string $id;
+    public string $customerId;
+    public float $amount;
+    public string $currency;
+    public string $status;
+    public string $type; // deposit, withdraw
+    public DateTime $createdAt;
+    public array $metadata;
+}
+```
+
+## APIs and Integrations
+- **XGATE API v1**: API principal da XGATE (https://api.xgateglobal.com)
+- **Guzzle HTTP**: Cliente HTTP para requisições
+- **Monolog**: Sistema de logging
+- **Symfony Validator**: Validação de dados
+
+## Infrastructure Requirements
+- **PHP 8.1+**: Versão mínima do PHP
+- **Composer**: Gerenciador de dependências
+- **ext-json**: Extensão JSON do PHP
+- **ext-curl**: Extensão cURL do PHP
+- **OpenSSL**: Para comunicação HTTPS
+
+# Development Roadmap
+
+## Fase 1: MVP - Core Functionality (Fundação)
+**Objetivo**: Criar a base funcional do SDK com autenticação e operações básicas
+
+### Componentes MVP:
+1. **Estrutura Base do Projeto**
+   - Configuração do Composer com PSR-4
+   - Estrutura de diretórios seguindo boas práticas
+   - Configuração de autoloading
+
+2. **Sistema de Autenticação**
+   - Classe AuthenticationManager
+   - Gerenciamento de tokens simples (não JWT)
+   - Login via email/password
+   - Tratamento de erros de autenticação
+
+3. **Cliente HTTP Base**
+   - Wrapper para Guzzle HTTP Client
+   - Configuração de headers padrão
+   - Tratamento básico de erros HTTP
+   - Logging de requisições
+
+4. **Gestão de Clientes (Básico)**
+   - Criar cliente
+   - Buscar cliente por ID
+   - Validação básica de dados
+
+5. **Sistema PIX Básico**
+   - Criar chave PIX
+   - Listar chaves PIX do cliente
+   - Validação de tipos de chave
+
+6. **Operações FIAT Básicas**
+   - Listar moedas disponíveis
+   - Criar depósito
+   - Criar saque via PIX
+
+## Fase 2: Funcionalidades Avançadas
+**Objetivo**: Expandir funcionalidades e melhorar robustez
+
+### Componentes Avançados:
+1. **Sistema Cripto Completo**
+   - Consulta de carteiras
+   - Saques para carteiras externas
+   - Suporte a múltiplas redes blockchain
+   - Validação de endereços de carteira
+
+2. **Sistema de Conversões**
+   - Consulta de cotações
+   - Processamento de conversões
+   - Histórico de taxas
+
+3. **Tratamento Avançado de Erros**
+   - Exceções específicas por tipo de erro
+   - Retry automático para erros temporários
+   - Circuit breaker para falhas recorrentes
+
+4. **Sistema de Cache**
+   - Cache de tokens de autenticação
+   - Cache de cotações (com TTL)
+   - Cache de configurações
+
+5. **Webhooks e Callbacks**
+   - Processamento de webhooks da XGATE
+   - Validação de assinaturas
+   - Handlers para diferentes tipos de evento
+
+## Fase 3: Otimização e Ferramentas
+**Objetivo**: Melhorar performance, observabilidade e experiência do desenvolvedor
+
+### Componentes de Otimização:
+1. **Sistema de Logging Avançado**
+   - Logs estruturados com contexto
+   - Diferentes níveis de log
+   - Integração com sistemas de monitoramento
+
+2. **Métricas e Observabilidade**
+   - Coleta de métricas de performance
+   - Rastreamento de erros
+   - Health checks
+
+3. **Ferramentas de Desenvolvimento**
+   - CLI para testes rápidos
+   - Gerador de código para novos recursos
+   - Validador de configuração
+
+4. **Otimizações de Performance**
+   - Pool de conexões HTTP
+   - Compressão de requisições
+   - Otimização de serialização
+
+# Logical Dependency Chain
+
+## Ordem de Desenvolvimento:
+
+### 1. Fundação (Deve ser construído primeiro)
+- Estrutura do projeto e Composer
+- Sistema de configuração
+- Cliente HTTP base
+- Sistema de autenticação
+
+### 2. Recursos Core (Dependem da fundação)
+- Gestão de clientes
+- Sistema PIX básico
+- Operações FIAT básicas
+
+### 3. Recursos Avançados (Dependem dos recursos core)
+- Sistema cripto
+- Conversões
+- Webhooks
+
+### 4. Ferramentas e Otimizações (Dependem de tudo anterior)
+- Logging avançado
+- Métricas
+- CLI tools
+
+## Estratégia de MVP Rápido:
+1. **Semana 1**: Estrutura + Autenticação + Cliente HTTP
+2. **Semana 2**: Clientes + PIX + Depósitos básicos
+3. **Semana 3**: Saques + Testes + Documentação básica
+4. **Semana 4**: Refinamento + Exemplos + Release MVP
+
+## Atomicidade das Features:
+- Cada recurso pode ser desenvolvido independentemente após a fundação
+- Cada operação (depósito, saque, etc.) é autocontida
+- Sistema de plugins permite adicionar novos recursos sem quebrar existentes
+
+# Risks and Mitigations
+
+## Technical Challenges
+
+### 1. Gerenciamento de Tokens de Acesso
+**Risco**: Tokens expirando durante operações longas
+**Mitigação**: 
+- Re-autenticação automática quando necessário
+- Cache de tokens com validação de expiração
+- Retry automático em caso de token expirado
+
+### 2. Rate Limiting da API
+**Risco**: Aplicações sendo bloqueadas por excesso de requisições
+**Mitigação**:
+- Implementar rate limiting no lado cliente
+- Queue de requisições com throttling
+- Backoff exponencial para retry
+
+### 3. Validação de Dados
+**Risco**: Dados inválidos causando erros na API
+**Mitigação**:
+- Validação rigorosa no lado cliente
+- Sanitização de dados de entrada
+- Testes abrangentes com dados edge case
+
+## MVP Definition
+
+### O que DEVE estar no MVP:
+- Autenticação funcional
+- Criar cliente
+- Operações PIX básicas (criar chave, listar chaves)
+- Depósito FIAT
+- Saque FIAT
+- Tratamento básico de erros
+- Documentação de instalação e uso básico
+
+### O que pode ser DEIXADO para depois:
+- Sistema cripto completo
+- Conversões
+- Webhooks
+- Métricas avançadas
+- CLI tools
+- Cache avançado
+
+## Resource Constraints
+
+### Desenvolvimento
+- **Tempo**: Foco no MVP funcional primeiro
+- **Complexidade**: Começar com casos de uso simples
+- **Testes**: Testes unitários básicos no MVP, integração depois
+
+### Infraestrutura
+- **Dependências**: Minimizar dependências externas no MVP
+- **PHP Version**: Suporte a PHP 8.1+ (versões mais recentes)
+- **Ambiente**: Desenvolvimento local primeiro, CI/CD depois
+
+# Appendix
+
+## Research Findings
+
+### Análise da API XGATE
+- **Base URL**: https://api.xgateglobal.com
+- **Autenticação**: Token simples via POST /login (email/password)
+- **Rate Limiting**: Não especificado na documentação
+- **Versionamento**: Aparenta ser v1 (não explícito)
+- **Ambiente de Desenvolvimento**: Não disponível - apenas produção
+
+### Endpoints Identificados:
+1. **POST /login** - Autenticação (email/password → token)
+2. **POST /customer** - Criar cliente
+3. **GET /customer/{id}** - Buscar cliente
+4. **POST /pix/customer/{customerId}/key** - Criar chave PIX
+5. **GET /pix/customer/{customerId}/key** - Listar chaves PIX
+6. **GET /deposit/company/currencies** - Listar moedas para depósito
+7. **POST /deposit** - Criar depósito
+8. **GET /withdraw/company/currencies** - Listar moedas para saque
+9. **POST /withdraw** - Criar saque
+10. **GET /crypto/customer/{customerId}/wallet** - Buscar carteira cripto
+11. **GET /withdraw/company/blockchain-networks** - Listar redes blockchain
+12. **POST /withdraw/transaction/crypto/amount** - Saque cripto
+
+## Technical Specifications
+
+### Estrutura de Resposta Padrão da API:
+```json
+{
+  "success": true,
+  "data": {...},
+  "message": "Success"
+}
+```
+
+### Estrutura de Erro Padrão:
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "code": "ERROR_CODE"
+}
+```
+
+### Tipos de Chave PIX Suportados:
+- CPF (11 dígitos)
+- CNPJ (14 dígitos)  
+- Email (formato válido)
+- Telefone (formato brasileiro)
+- Chave aleatória (UUID)
+
+### Moedas Fiduciárias Identificadas:
+- BRL (Real Brasileiro)
+- USD (Dólar Americano)
+- EUR (Euro)
+
+### Criptomoedas e Redes Identificadas:
+- **USDT**: BEP-20 (Binance Smart Chain)
+- **USDC**: BEP-20, ERC-20
+- **Outras**: Conforme disponibilidade da API
+
+## Estratégia de Testes - Limitações Importantes
+
+### ⚠️ Limitação Crítica: Sem Ambiente de Desenvolvimento
+A API da XGATE **não possui ambiente de desenvolvimento/sandbox**, apenas produção. Isso impacta significativamente a estratégia de testes:
+
+### Tipos de Teste Possíveis:
+1. **Testes Unitários (Recomendado)**
+   - Testar instanciação de classes
+   - Validação de parâmetros
+   - Formatação de dados
+   - Lógica de negócio isolada
+   - Mocks de respostas da API
+
+2. **Testes de Integração Limitados**
+   - Apenas com dados mockados
+   - Validação de estrutura de requisições
+   - Testes de serialização/deserialização
+   - Verificação de headers e autenticação
+
+### Tipos de Teste NÃO Possíveis:
+❌ **Testes que fazem requisições reais à API**
+❌ **Testes de integração end-to-end**  
+❌ **Testes de fluxos completos com dados reais**
+❌ **Testes de performance com API real**
+
+### Estratégia Recomendada:
+1. **Foco em Testes Unitários**
+   - Garantir que classes podem ser instanciadas
+   - Validar que métodos retornam objetos corretos
+   - Testar validação de dados de entrada
+   - Verificar formatação de requisições
+
+2. **Mocks Abrangentes**
+   - Criar mocks detalhados das respostas da API
+   - Simular cenários de erro
+   - Testar tratamento de exceções
+
+3. **Validação Manual**
+   - Testes manuais cuidadosos em produção
+   - Documentação detalhada de casos de teste
+   - Logs abrangentes para debugging
+
+### Exemplos de Testes Viáveis:
+```php
+// ✅ POSSÍVEL: Teste de instanciação
+public function testCanInstantiateClient()
+{
+    $client = new XGateClient(['email' => 'test@test.com']);
+    $this->assertInstanceOf(XGateClient::class, $client);
+}
+
+// ✅ POSSÍVEL: Teste de validação
+public function testValidatesEmailFormat()
+{
+    $this->expectException(ValidationException::class);
+    new Customer(['email' => 'invalid-email']);
+}
+
+// ❌ NÃO POSSÍVEL: Teste real com API
+public function testCreateCustomerInAPI()
+{
+    // Não pode ser feito - sem ambiente de dev
+}
+``` 

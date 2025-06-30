@@ -1,0 +1,11 @@
+# Task ID: 2
+# Title: Implement Configuration Manager
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create a ConfigurationManager class to securely manage SDK credentials and settings with complete PHPDoc documentation.
+# Details:
+Implement ConfigurationManager to handle environment variables and config files. Use Symfony Dotenv (^6.0) for .env support. Store credentials securely, never hardcoded. Support for multiple environments (dev, prod). Note: XGATE API only has production environment. Include complete PHPDoc documentation with class descriptions (@package, @author), method documentation (@param, @return, @throws), property documentation (@var), and usage examples (@example) for IDE autocompletion support.
+
+# Test Strategy:
+Test loading and validation of configuration values using mocked environment variables and config files. Ensure sensitive data is not exposed in logs or errors. Use unit tests to validate configuration parsing and validation logic. Verify PHPDoc completeness and IDE autocompletion functionality.

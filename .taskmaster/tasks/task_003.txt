@@ -1,0 +1,43 @@
+# Task ID: 3
+# Title: Build HTTP Client Wrapper with Guzzle
+# Status: pending
+# Dependencies: 1, 2
+# Priority: high
+# Description: Implement a robust HTTP client wrapper using Guzzle for API requests with comprehensive PHPDoc documentation.
+# Details:
+Create HttpClient class wrapping Guzzle (^7.0). Set default headers (Accept, Content-Type: application/json). Implement request/response logging with Monolog (^3.0). Handle basic HTTP errors and exceptions. Include complete PHPDoc documentation: class docblocks with @package and @author, method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions, property docblocks with @var, and @example annotations for usage examples. Use PHP 8.1+ types and detailed docblocks for complex arrays.
+
+# Test Strategy:
+Test HTTP client functionality using Guzzle MockHandler to simulate API responses. Validate headers, logging, and error handling with mocked HTTP responses. Focus on unit tests for request formatting and response parsing. Verify PHPDoc documentation quality and IDE autocompletion support.
+
+# Subtasks:
+## 1. Set up Guzzle HTTP client [pending]
+### Dependencies: None
+### Description: Install and configure the Guzzle HTTP client to be used for sending HTTP requests, including mounting the client and basic instantiation.
+### Details:
+Use Composer to install Guzzle. Initialize the client with default settings and ensure it is accessible for making requests. Prepare for configuration of default headers in the next step.
+
+## 2. Configure default headers for Guzzle client [pending]
+### Dependencies: 3.1
+### Description: Define and apply default HTTP headers for all requests made by the Guzzle client to ensure consistent request metadata.
+### Details:
+Set default headers using Guzzle's setDefaultOption or configuration methods to include necessary headers such as Content-Type, Authorization, or custom headers as required by the API.
+
+## 3. Implement logging with Monolog [pending]
+### Dependencies: 3.1, 3.2
+### Description: Integrate Monolog to log HTTP requests and responses made through the Guzzle client for debugging and monitoring purposes.
+### Details:
+Configure Monolog handlers and formatters. Add middleware or event listeners to Guzzle to capture request and response data and send it to Monolog logs.
+
+## 4. Implement error and exception handling [pending]
+### Dependencies: 3.1, 3.2, 3.3
+### Description: Design robust error and exception handling around Guzzle requests to gracefully manage HTTP errors, network issues, and unexpected failures.
+### Details:
+Use try-catch blocks, Guzzle's error events, and custom exception classes to handle errors. Ensure logging captures error details and that the client can recover or fail gracefully.
+
+## 5. Add comprehensive PHPDoc documentation [pending]
+### Dependencies: 3.1, 3.2, 3.3, 3.4
+### Description: Document all classes, methods, and functions related to the Guzzle client wrapper, logging, and error handling with detailed PHPDoc comments.
+### Details:
+Write PHPDoc blocks describing parameters, return types, exceptions thrown, and usage examples. Ensure documentation supports maintainability and IDE integration.
+

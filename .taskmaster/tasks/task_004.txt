@@ -1,0 +1,43 @@
+# Task ID: 4
+# Title: Implement Token Authentication Manager
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Develop AuthenticationManager for simple token authentication with XGATE API, handling login, token storage, and request authorization with complete PHPDoc documentation.
+# Details:
+Implement AuthenticationManager to authenticate with XGATE API using email/password login. Send POST request to /login endpoint with credentials, store the received access token using PSR-16 cache (symfony/cache ^6.0), and include token in Authorization: Bearer {token} header for subsequent requests. Handle authentication failures and throw AuthenticationException on error. No token renewal needed as XGATE uses simple tokens, not JWT. Include comprehensive PHPDoc documentation: class docblocks with description, @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for usage examples. Use PHP 8.1+ types and detailed docblocks for complex data structures.
+
+# Test Strategy:
+Test login process using mocked HTTP responses for valid/invalid credentials, token storage and retrieval from cache using mock cache implementations, proper Authorization header inclusion in requests, and exception handling for authentication failures. Use comprehensive mocks to simulate all authentication scenarios without real API calls. Verify PHPDoc completeness and IDE autocompletion functionality.
+
+# Subtasks:
+## 1. Implement login method [pending]
+### Dependencies: None
+### Description: Create method to send POST request to /login with email and password credentials, including complete PHPDoc documentation
+### Details:
+Include @param for email and password parameters, @return for boolean result, @throws for AuthenticationException, and @example for usage
+
+## 2. Implement token storage [pending]
+### Dependencies: None
+### Description: Store received access token using PSR-16 cache interface with PHPDoc documentation
+### Details:
+Document cache interface usage, token storage methods with proper @param and @return annotations
+
+## 3. Implement token retrieval and header injection [pending]
+### Dependencies: None
+### Description: Retrieve stored token and add Authorization: Bearer {token} header to requests with complete PHPDoc
+### Details:
+Document header injection methods, token retrieval with @return annotations for token or null
+
+## 4. Implement error handling [pending]
+### Dependencies: None
+### Description: Handle authentication failures and throw AuthenticationException with appropriate messages and PHPDoc
+### Details:
+Document exception throwing with @throws annotations, error message handling with proper types
+
+## 5. Create authentication manager interface [pending]
+### Dependencies: None
+### Description: Define interface for authentication operations (login, getToken, isAuthenticated) with comprehensive PHPDoc
+### Details:
+Include interface docblock with @package, method signatures with full @param, @return, @throws documentation
+

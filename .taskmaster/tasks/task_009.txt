@@ -1,0 +1,37 @@
+# Task ID: 9
+# Title: Add Exception Handling and Error Management
+# Status: pending
+# Dependencies: 3, 4, 5
+# Priority: medium
+# Description: Implement custom exceptions and robust error handling across the SDK with complete PHPDoc documentation.
+# Details:
+Create exception classes: XGateException, AuthenticationException, ValidationException, ApiException, RateLimitException, NetworkException. Integrate with HTTP client and resources. Provide clear, actionable error messages. Include comprehensive PHPDoc documentation: exception class docblocks with @package, @author; constructor docblocks with @param for error messages and codes; property docblocks with @var for error details; @example annotations showing proper exception handling. Use PHP 8.1+ types and detailed docblocks for exception hierarchies and error data structures.
+
+# Test Strategy:
+Test exception throwing and handling in various scenarios using mocked error responses. Validate error messages and logging with unit tests. Use mock HTTP responses to simulate different error conditions and test exception handling logic. Verify PHPDoc completeness and IDE support for exception handling patterns.
+
+# Subtasks:
+## 1. Define Custom Exception Classes [pending]
+### Dependencies: None
+### Description: Create a hierarchy of custom exception classes extending PHP's base Exception class to represent different error scenarios in the SDK.
+### Details:
+Design meaningful and specific exception classes (e.g., MissingArgumentException, DatabaseConnectionException) with constructors and optionally override __toString() for custom messages. Include custom methods or properties if needed for additional context.
+
+## 2. Integrate Exceptions with HTTP Client and Resources [pending]
+### Dependencies: 9.1
+### Description: Incorporate the custom exception classes into the HTTP client and resource handling layers to throw and catch exceptions appropriately.
+### Details:
+Modify HTTP client and resource classes to throw specific custom exceptions on error conditions (e.g., connection failures, invalid responses). Implement try-catch blocks to handle these exceptions and propagate meaningful error information.
+
+## 3. Implement Error Message Handling [pending]
+### Dependencies: 9.2
+### Description: Develop a consistent mechanism to handle and display error messages from exceptions across the SDK.
+### Details:
+Ensure all thrown exceptions carry descriptive and user-friendly messages. Implement centralized error logging or user notification based on exception types. Format error messages for clarity and debugging support.
+
+## 4. Add Complete PHPDoc Documentation [pending]
+### Dependencies: 9.1, 9.2, 9.3
+### Description: Document all custom exception classes, methods, and error handling logic using comprehensive PHPDoc comments.
+### Details:
+Write PHPDoc blocks for each class and method explaining purpose, parameters, return types, and thrown exceptions. Include usage examples where applicable to improve maintainability and developer understanding.
+

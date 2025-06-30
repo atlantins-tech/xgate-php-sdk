@@ -1,0 +1,11 @@
+# Task ID: 1
+# Title: Setup Project Repository and Composer Structure
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Initialize the PHP SDK project with Composer, PSR-4 autoloading, and directory structure following best practices.
+# Details:
+Create a new repository. Initialize with `composer init` and set up PSR-4 autoloading in composer.json. Structure directories as `src/`, `tests/`, `examples/`. Use PHP 8.1+ as minimum requirement. Add .gitignore for vendor and IDE files. Recommended: Composer 2.x, PHP 8.1+.
+
+# Test Strategy:
+Validate project structure, autoloading, and PHP version compatibility. Run `composer validate` and check autoloading with a simple test class. Since XGATE API has no sandbox environment, focus on unit tests for class instantiation and structure validation.

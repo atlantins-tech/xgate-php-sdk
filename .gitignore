@@ -1,3 +1,23 @@
+# Composer
+/vendor/
+composer.lock
+
+# PHP
+*.php~
+*.tmp
+*.temp
+
+# PHPUnit
+/phpunit.xml
+/coverage/
+/.phpunit.result.cache
+
+# PHP CS Fixer
+/.php-cs-fixer.cache
+
+# PHPStan
+/phpstan.neon
+
 # Logs
 logs
 *.log
@@ -11,13 +31,15 @@ node_modules/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
 
 # MCP configuration with API keys
 .cursor/mcp.json
 
 # Editor directories and files
-.idea
-.vscode
+.idea/
+.vscode/
 *.suo
 *.ntvs*
 *.njsproj
@@ -26,3 +48,13 @@ node_modules/
 
 # OS specific
 .DS_Store
+Thumbs.db
+
+# Build artifacts
+/build/
+/dist/
+
+# IDE specific
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php

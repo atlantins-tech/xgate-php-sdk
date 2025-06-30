@@ -1,0 +1,457 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Project Repository and Composer Structure",
+        "description": "Initialize the PHP SDK project with Composer, PSR-4 autoloading, and directory structure following best practices.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Create a new repository. Initialize with `composer init` and set up PSR-4 autoloading in composer.json. Structure directories as `src/`, `tests/`, `examples/`. Use PHP 8.1+ as minimum requirement. Add .gitignore for vendor and IDE files. Recommended: Composer 2.x, PHP 8.1+.",
+        "testStrategy": "Validate project structure, autoloading, and PHP version compatibility. Run `composer validate` and check autoloading with a simple test class. Since XGATE API has no sandbox environment, focus on unit tests for class instantiation and structure validation.",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement Configuration Manager",
+        "description": "Create a ConfigurationManager class to securely manage SDK credentials and settings with complete PHPDoc documentation.",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "high",
+        "details": "Implement ConfigurationManager to handle environment variables and config files. Use Symfony Dotenv (^6.0) for .env support. Store credentials securely, never hardcoded. Support for multiple environments (dev, prod). Note: XGATE API only has production environment. Include complete PHPDoc documentation with class descriptions (@package, @author), method documentation (@param, @return, @throws), property documentation (@var), and usage examples (@example) for IDE autocompletion support.",
+        "testStrategy": "Test loading and validation of configuration values using mocked environment variables and config files. Ensure sensitive data is not exposed in logs or errors. Use unit tests to validate configuration parsing and validation logic. Verify PHPDoc completeness and IDE autocompletion functionality.",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Build HTTP Client Wrapper with Guzzle",
+        "description": "Implement a robust HTTP client wrapper using Guzzle for API requests with comprehensive PHPDoc documentation.",
+        "status": "pending",
+        "dependencies": [
+          1,
+          2
+        ],
+        "priority": "high",
+        "details": "Create HttpClient class wrapping Guzzle (^7.0). Set default headers (Accept, Content-Type: application/json). Implement request/response logging with Monolog (^3.0). Handle basic HTTP errors and exceptions. Include complete PHPDoc documentation: class docblocks with @package and @author, method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions, property docblocks with @var, and @example annotations for usage examples. Use PHP 8.1+ types and detailed docblocks for complex arrays.",
+        "testStrategy": "Test HTTP client functionality using Guzzle MockHandler to simulate API responses. Validate headers, logging, and error handling with mocked HTTP responses. Focus on unit tests for request formatting and response parsing. Verify PHPDoc documentation quality and IDE autocompletion support.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up Guzzle HTTP client",
+            "description": "Install and configure the Guzzle HTTP client to be used for sending HTTP requests, including mounting the client and basic instantiation.",
+            "dependencies": [],
+            "details": "Use Composer to install Guzzle. Initialize the client with default settings and ensure it is accessible for making requests. Prepare for configuration of default headers in the next step.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Configure default headers for Guzzle client",
+            "description": "Define and apply default HTTP headers for all requests made by the Guzzle client to ensure consistent request metadata.",
+            "dependencies": [
+              1
+            ],
+            "details": "Set default headers using Guzzle's setDefaultOption or configuration methods to include necessary headers such as Content-Type, Authorization, or custom headers as required by the API.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement logging with Monolog",
+            "description": "Integrate Monolog to log HTTP requests and responses made through the Guzzle client for debugging and monitoring purposes.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Configure Monolog handlers and formatters. Add middleware or event listeners to Guzzle to capture request and response data and send it to Monolog logs.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement error and exception handling",
+            "description": "Design robust error and exception handling around Guzzle requests to gracefully manage HTTP errors, network issues, and unexpected failures.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Use try-catch blocks, Guzzle's error events, and custom exception classes to handle errors. Ensure logging captures error details and that the client can recover or fail gracefully.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Add comprehensive PHPDoc documentation",
+            "description": "Document all classes, methods, and functions related to the Guzzle client wrapper, logging, and error handling with detailed PHPDoc comments.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Write PHPDoc blocks describing parameters, return types, exceptions thrown, and usage examples. Ensure documentation supports maintainability and IDE integration.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Token Authentication Manager",
+        "description": "Develop AuthenticationManager for simple token authentication with XGATE API, handling login, token storage, and request authorization with complete PHPDoc documentation.",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3
+        ],
+        "priority": "high",
+        "details": "Implement AuthenticationManager to authenticate with XGATE API using email/password login. Send POST request to /login endpoint with credentials, store the received access token using PSR-16 cache (symfony/cache ^6.0), and include token in Authorization: Bearer {token} header for subsequent requests. Handle authentication failures and throw AuthenticationException on error. No token renewal needed as XGATE uses simple tokens, not JWT. Include comprehensive PHPDoc documentation: class docblocks with description, @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for usage examples. Use PHP 8.1+ types and detailed docblocks for complex data structures.",
+        "testStrategy": "Test login process using mocked HTTP responses for valid/invalid credentials, token storage and retrieval from cache using mock cache implementations, proper Authorization header inclusion in requests, and exception handling for authentication failures. Use comprehensive mocks to simulate all authentication scenarios without real API calls. Verify PHPDoc completeness and IDE autocompletion functionality.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement login method",
+            "description": "Create method to send POST request to /login with email and password credentials, including complete PHPDoc documentation",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Include @param for email and password parameters, @return for boolean result, @throws for AuthenticationException, and @example for usage",
+            "testStrategy": "Test with mocked HTTP responses and verify PHPDoc quality"
+          },
+          {
+            "id": 2,
+            "title": "Implement token storage",
+            "description": "Store received access token using PSR-16 cache interface with PHPDoc documentation",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Document cache interface usage, token storage methods with proper @param and @return annotations",
+            "testStrategy": "Test token storage with mock cache and verify documentation completeness"
+          },
+          {
+            "id": 3,
+            "title": "Implement token retrieval and header injection",
+            "description": "Retrieve stored token and add Authorization: Bearer {token} header to requests with complete PHPDoc",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Document header injection methods, token retrieval with @return annotations for token or null",
+            "testStrategy": "Test header injection and verify PHPDoc for IDE support"
+          },
+          {
+            "id": 4,
+            "title": "Implement error handling",
+            "description": "Handle authentication failures and throw AuthenticationException with appropriate messages and PHPDoc",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Document exception throwing with @throws annotations, error message handling with proper types",
+            "testStrategy": "Test exception scenarios and verify exception documentation"
+          },
+          {
+            "id": 5,
+            "title": "Create authentication manager interface",
+            "description": "Define interface for authentication operations (login, getToken, isAuthenticated) with comprehensive PHPDoc",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Include interface docblock with @package, method signatures with full @param, @return, @throws documentation",
+            "testStrategy": "Verify interface documentation and IDE autocompletion support"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Create Core XGateClient Class",
+        "description": "Build the main XGateClient class to orchestrate SDK operations with complete PHPDoc documentation.",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3,
+          4
+        ],
+        "priority": "high",
+        "details": "Implement XGateClient as the main entry point. Inject ConfigurationManager, HttpClient, and AuthenticationManager. Provide methods for common operations. Follow PSR-12 coding standards. Include comprehensive PHPDoc documentation: class docblocks with description, @package, @author; constructor and method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for common usage patterns. Use PHP 8.1+ types and detailed docblocks for dependency injection and method signatures.",
+        "testStrategy": "Test instantiation and basic method calls using mocked dependencies. Validate dependency injection and error handling with unit tests. Use mock objects for all injected dependencies to test class behavior in isolation. Verify PHPDoc completeness and IDE autocompletion support.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Dependency Injection Container",
+            "description": "Configure and implement a dependency injection container using PHP-DI or a similar library to manage object creation and dependencies for the SDK.",
+            "dependencies": [],
+            "details": "Use constructor injection as the primary method and enable autowiring for automatic dependency resolution. Define service bindings and configurations in the container setup to ensure decoupled and maintainable code architecture.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Core SDK Methods",
+            "description": "Develop the main operational methods of the SDK that utilize injected dependencies to perform SDK functionalities.",
+            "dependencies": [
+              1
+            ],
+            "details": "Design and implement core methods that interact with the injected services and components, ensuring clean API design and adherence to interface contracts. Use dependency injection to access required services within these methods.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Integrate Error Handling Mechanism",
+            "description": "Incorporate robust error handling within the SDK operations to manage exceptions and provide meaningful error feedback.",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement error handling strategies such as try-catch blocks, custom exception classes, and logging where appropriate. Ensure that error handling integrates smoothly with the dependency injection setup and core methods.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Write PHPDoc Documentation with Usage Examples",
+            "description": "Create comprehensive PHPDoc comments for all classes, methods, and properties, including practical usage examples for the SDK.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Document the SDK codebase thoroughly using PHPDoc standards to improve maintainability and developer experience. Include examples demonstrating how to instantiate and use the SDK with dependency injection and error handling.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Customer Resource and Model",
+        "description": "Develop CustomerResource for client management and Customer model for data representation with comprehensive PHPDoc documentation.",
+        "status": "pending",
+        "dependencies": [
+          5
+        ],
+        "priority": "medium",
+        "details": "Create CustomerResource class for API calls (create, get). Use Symfony Validator (^6.0) for data validation. Implement Customer model with required fields (id, name, email, document, phone, createdAt, updatedAt). Include complete PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and field descriptions; @example annotations for customer creation and retrieval. Use PHP 8.1+ types and detailed docblocks for model properties and validation rules.",
+        "testStrategy": "Test customer creation and retrieval using mocked HTTP responses. Validate model serialization, data validation rules, and error messages with unit tests. Use mock HTTP client to simulate API responses without real API calls. Verify PHPDoc quality and IDE autocompletion functionality.",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Develop Pix Resource and Key Model",
+        "description": "Build PixResource for PIX key management and PixKey model with complete PHPDoc documentation.",
+        "status": "pending",
+        "dependencies": [
+          5,
+          6
+        ],
+        "priority": "medium",
+        "details": "Implement PixResource for creating and listing PIX keys. Validate key types (CPF, CNPJ, email, phone, random). Use Symfony Validator for validation. Implement PixKey model. Include comprehensive PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for PIX key operations. Document key type validation rules and enum values with proper PHP 8.1+ types.",
+        "testStrategy": "Test PIX key creation and listing using mocked API responses. Validate key type validation rules and error handling for invalid key types with unit tests. Use comprehensive mocks to test all PIX key scenarios. Verify PHPDoc completeness and IDE support for key type autocompletion.",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Fiat Deposit and Withdrawal Resources",
+        "description": "Create DepositResource and WithdrawResource for fiat operations with comprehensive PHPDoc documentation.",
+        "status": "pending",
+        "dependencies": [
+          5,
+          6,
+          7
+        ],
+        "priority": "medium",
+        "details": "Implement DepositResource for listing currencies and creating deposits. Implement WithdrawResource for listing currencies and creating withdrawals. Use Transaction model for data. Validate input with Symfony Validator. Include complete PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for deposit and withdrawal operations. Use PHP 8.1+ types and detailed docblocks for transaction data structures and currency arrays.",
+        "testStrategy": "Test listing currencies and deposit/withdrawal creation using mocked API responses. Validate input validation rules, error handling, and model serialization with unit tests. Use mock HTTP responses to simulate all transaction scenarios. Verify PHPDoc quality and IDE autocompletion for transaction methods.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement DepositResource",
+            "description": "Develop the DepositResource class to handle deposit transactions, including currency listing, input validation, and error handling.",
+            "dependencies": [],
+            "details": "Create methods for receiving deposit requests, validating input data such as amount and currency, processing the deposit transaction, and returning appropriate responses with error handling using try-catch blocks.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement WithdrawResource",
+            "description": "Develop the WithdrawResource class to handle withdrawal transactions, including currency listing, input validation, and error handling.",
+            "dependencies": [],
+            "details": "Create methods for receiving withdrawal requests, validating input data such as amount and currency, processing the withdrawal transaction, and returning appropriate responses with error handling using try-catch blocks.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop Transaction Model with Validation",
+            "description": "Create the Transaction model class that represents transactions and includes validation logic to ensure data integrity.",
+            "dependencies": [],
+            "details": "Define properties for transaction attributes (amount, currency, type, date, etc.), implement validation rules for these properties, and ensure secure handling of data to prevent invalid transactions. Use namespaces and adhere to PSR standards for maintainability.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Write PHPDoc Documentation with Examples",
+            "description": "Document the DepositResource, WithdrawResource, and Transaction model classes using comprehensive PHPDoc comments including usage examples.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Add PHPDoc blocks to all classes, methods, and properties describing their purpose, parameters, return types, exceptions thrown, and provide example code snippets demonstrating typical usage scenarios. Follow PHPDoc standards for clarity and maintainability.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Add Exception Handling and Error Management",
+        "description": "Implement custom exceptions and robust error handling across the SDK with complete PHPDoc documentation.",
+        "status": "pending",
+        "dependencies": [
+          3,
+          4,
+          5
+        ],
+        "priority": "medium",
+        "details": "Create exception classes: XGateException, AuthenticationException, ValidationException, ApiException, RateLimitException, NetworkException. Integrate with HTTP client and resources. Provide clear, actionable error messages. Include comprehensive PHPDoc documentation: exception class docblocks with @package, @author; constructor docblocks with @param for error messages and codes; property docblocks with @var for error details; @example annotations showing proper exception handling. Use PHP 8.1+ types and detailed docblocks for exception hierarchies and error data structures.",
+        "testStrategy": "Test exception throwing and handling in various scenarios using mocked error responses. Validate error messages and logging with unit tests. Use mock HTTP responses to simulate different error conditions and test exception handling logic. Verify PHPDoc completeness and IDE support for exception handling patterns.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Custom Exception Classes",
+            "description": "Create a hierarchy of custom exception classes extending PHP's base Exception class to represent different error scenarios in the SDK.",
+            "dependencies": [],
+            "details": "Design meaningful and specific exception classes (e.g., MissingArgumentException, DatabaseConnectionException) with constructors and optionally override __toString() for custom messages. Include custom methods or properties if needed for additional context.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Integrate Exceptions with HTTP Client and Resources",
+            "description": "Incorporate the custom exception classes into the HTTP client and resource handling layers to throw and catch exceptions appropriately.",
+            "dependencies": [
+              1
+            ],
+            "details": "Modify HTTP client and resource classes to throw specific custom exceptions on error conditions (e.g., connection failures, invalid responses). Implement try-catch blocks to handle these exceptions and propagate meaningful error information.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Error Message Handling",
+            "description": "Develop a consistent mechanism to handle and display error messages from exceptions across the SDK.",
+            "dependencies": [
+              2
+            ],
+            "details": "Ensure all thrown exceptions carry descriptive and user-friendly messages. Implement centralized error logging or user notification based on exception types. Format error messages for clarity and debugging support.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Add Complete PHPDoc Documentation",
+            "description": "Document all custom exception classes, methods, and error handling logic using comprehensive PHPDoc comments.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Write PHPDoc blocks for each class and method explaining purpose, parameters, return types, and thrown exceptions. Include usage examples where applicable to improve maintainability and developer understanding.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Write Basic Documentation and Examples",
+        "description": "Create installation guide, basic usage examples, and comprehensive PHPDoc annotations for IDE support.",
+        "status": "pending",
+        "dependencies": [
+          1,
+          5,
+          9
+        ],
+        "priority": "medium",
+        "details": "Write README.md with installation and quickstart. Add complete PHPDoc to all public methods, classes, and properties following the established standards: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for common usage patterns. Provide example scripts for common workflows. Ensure comprehensive IDE autocompletion support with PHP 8.1+ types and detailed docblocks. Note: Examples should be clear that XGATE API only has production environment and real transactions will occur.",
+        "testStrategy": "Validate documentation clarity and example scripts syntax. Test PHPDoc generation and IDE support comprehensively. Ensure examples are syntactically correct and demonstrate proper SDK usage patterns without requiring real API calls. Verify that all PHPDoc annotations provide meaningful IDE autocompletion and type hints.",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Configure Documentation Standards and PHPDoc Tools",
+        "description": "Set up PHPDoc standards, validation tools, and IDE helpers to ensure consistent documentation and complete autocompletion support across the SDK.",
+        "details": "Configure comprehensive documentation tooling and standards: 1) Set up PHPStan with docblock validation rules in phpstan.neon - enable checkMissingIterableValueType, checkGenericClassInNonGenericObjectType, and reportUnmatchedIgnoredErrors. Add custom rules for @param, @return, @throws validation. 2) Configure PHP CS Fixer with documentation-specific rules: phpdoc_align, phpdoc_annotation_without_dot, phpdoc_indent, phpdoc_no_access, phpdoc_no_empty_return, phpdoc_order, phpdoc_return_self_reference, phpdoc_scalar, phpdoc_separation, phpdoc_summary, phpdoc_to_comment, phpdoc_trim, phpdoc_types, phpdoc_var_without_name. 3) Create standardized docblock templates in docs/phpdoc-templates.md covering class headers (@package XGate\\SDK, @author, @since), method documentation (@param type $name description, @return type description, @throws ExceptionClass when condition), property documentation (@var type description), and @example blocks. 4) Configure IDE helpers: create .phpstorm.meta.php for PhpStorm type hints, configure psalm.xml for static analysis. 5) Document PHPDoc standards in README.md section covering required annotations, type declarations, description formats, and example usage patterns. Include pre-commit hooks configuration to validate documentation before commits.",
+        "testStrategy": "Validate PHPStan configuration by running analysis on existing code and ensuring docblock violations are detected. Test PHP CS Fixer rules by running fixer on sample code with documentation issues and verifying corrections. Create sample classes following the templates and verify IDE autocompletion works correctly in PhpStorm/VSCode. Run documentation generation tools (phpDocumentor) to ensure templates produce clean output. Test pre-commit hooks by attempting commits with missing or malformed docblocks. Verify that all configured tools integrate properly with CI/CD pipeline and provide meaningful error messages for documentation violations.",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure PHPStan with Docblock Validation",
+            "description": "Set up PHPStan to perform strict validation of PHPDoc annotations as analyzable type contracts to catch logic errors and improve code safety.",
+            "dependencies": [],
+            "details": "Install PHPStan and configure its settings to enable strict PHPDoc validation, including parameters like 'treatPhpDocTypesAsCertain' and custom rules for docblock patterns. Integrate PHPStan with the IDE for real-time feedback.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Set Up PHP CS Fixer Rules for Documentation",
+            "description": "Create and configure PHP CS Fixer rules specifically targeting docblock formatting and documentation style enforcement.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a PHP CS Fixer configuration file with rules that enforce consistent docblock styles, such as spacing, alignment, and annotation order. Ensure the configuration supports team-wide style consistency.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Standardized Docblock Templates",
+            "description": "Develop reusable and standardized docblock templates to be used across the codebase for consistent documentation.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Define templates for common docblock patterns including function signatures, variable types, and class descriptions that align with PHPStan validation and PHP CS Fixer rules.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Configure IDE Helpers for Docblock and PHPStan Integration",
+            "description": "Set up IDE plugins and helpers to support PHPStan validation and docblock templates for improved developer experience.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Install and configure IDE extensions (e.g., PhpStorm) to recognize PHPStan annotations and provide code completion, inline validation, and template insertion for docblocks.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Document Standards and Implement Pre-commit Hooks",
+            "description": "Write documentation for the established docblock and code style standards and enforce them using pre-commit hooks.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Create comprehensive documentation outlining the docblock standards and tooling setup. Configure git pre-commit hooks to run PHPStan and PHP CS Fixer checks to prevent non-compliant commits.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-30T14:55:19.383Z",
+      "updated": "2025-06-30T15:04:44.429Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

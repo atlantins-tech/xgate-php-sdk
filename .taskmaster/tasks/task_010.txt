@@ -1,0 +1,11 @@
+# Task ID: 10
+# Title: Write Basic Documentation and Examples
+# Status: pending
+# Dependencies: 1, 5, 9
+# Priority: medium
+# Description: Create installation guide, basic usage examples, and comprehensive PHPDoc annotations for IDE support.
+# Details:
+Write README.md with installation and quickstart. Add complete PHPDoc to all public methods, classes, and properties following the established standards: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for common usage patterns. Provide example scripts for common workflows. Ensure comprehensive IDE autocompletion support with PHP 8.1+ types and detailed docblocks. Note: Examples should be clear that XGATE API only has production environment and real transactions will occur.
+
+# Test Strategy:
+Validate documentation clarity and example scripts syntax. Test PHPDoc generation and IDE support comprehensively. Ensure examples are syntactically correct and demonstrate proper SDK usage patterns without requiring real API calls. Verify that all PHPDoc annotations provide meaningful IDE autocompletion and type hints.

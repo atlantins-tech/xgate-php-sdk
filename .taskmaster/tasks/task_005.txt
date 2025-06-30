@@ -1,0 +1,37 @@
+# Task ID: 5
+# Title: Create Core XGateClient Class
+# Status: pending
+# Dependencies: 2, 3, 4
+# Priority: high
+# Description: Build the main XGateClient class to orchestrate SDK operations with complete PHPDoc documentation.
+# Details:
+Implement XGateClient as the main entry point. Inject ConfigurationManager, HttpClient, and AuthenticationManager. Provide methods for common operations. Follow PSR-12 coding standards. Include comprehensive PHPDoc documentation: class docblocks with description, @package, @author; constructor and method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for common usage patterns. Use PHP 8.1+ types and detailed docblocks for dependency injection and method signatures.
+
+# Test Strategy:
+Test instantiation and basic method calls using mocked dependencies. Validate dependency injection and error handling with unit tests. Use mock objects for all injected dependencies to test class behavior in isolation. Verify PHPDoc completeness and IDE autocompletion support.
+
+# Subtasks:
+## 1. Setup Dependency Injection Container [pending]
+### Dependencies: None
+### Description: Configure and implement a dependency injection container using PHP-DI or a similar library to manage object creation and dependencies for the SDK.
+### Details:
+Use constructor injection as the primary method and enable autowiring for automatic dependency resolution. Define service bindings and configurations in the container setup to ensure decoupled and maintainable code architecture.
+
+## 2. Implement Core SDK Methods [pending]
+### Dependencies: 5.1
+### Description: Develop the main operational methods of the SDK that utilize injected dependencies to perform SDK functionalities.
+### Details:
+Design and implement core methods that interact with the injected services and components, ensuring clean API design and adherence to interface contracts. Use dependency injection to access required services within these methods.
+
+## 3. Integrate Error Handling Mechanism [pending]
+### Dependencies: 5.2
+### Description: Incorporate robust error handling within the SDK operations to manage exceptions and provide meaningful error feedback.
+### Details:
+Implement error handling strategies such as try-catch blocks, custom exception classes, and logging where appropriate. Ensure that error handling integrates smoothly with the dependency injection setup and core methods.
+
+## 4. Write PHPDoc Documentation with Usage Examples [pending]
+### Dependencies: 5.2, 5.3
+### Description: Create comprehensive PHPDoc comments for all classes, methods, and properties, including practical usage examples for the SDK.
+### Details:
+Document the SDK codebase thoroughly using PHPDoc standards to improve maintainability and developer experience. Include examples demonstrating how to instantiate and use the SDK with dependency injection and error handling.
+

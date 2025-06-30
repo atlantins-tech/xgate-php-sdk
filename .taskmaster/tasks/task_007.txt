@@ -1,0 +1,11 @@
+# Task ID: 7
+# Title: Develop Pix Resource and Key Model
+# Status: pending
+# Dependencies: 5, 6
+# Priority: medium
+# Description: Build PixResource for PIX key management and PixKey model with complete PHPDoc documentation.
+# Details:
+Implement PixResource for creating and listing PIX keys. Validate key types (CPF, CNPJ, email, phone, random). Use Symfony Validator for validation. Implement PixKey model. Include comprehensive PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for PIX key operations. Document key type validation rules and enum values with proper PHP 8.1+ types.
+
+# Test Strategy:
+Test PIX key creation and listing using mocked API responses. Validate key type validation rules and error handling for invalid key types with unit tests. Use comprehensive mocks to test all PIX key scenarios. Verify PHPDoc completeness and IDE support for key type autocompletion.

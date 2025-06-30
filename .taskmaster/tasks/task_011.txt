@@ -1,0 +1,43 @@
+# Task ID: 11
+# Title: Configure Documentation Standards and PHPDoc Tools
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Set up PHPDoc standards, validation tools, and IDE helpers to ensure consistent documentation and complete autocompletion support across the SDK.
+# Details:
+Configure comprehensive documentation tooling and standards: 1) Set up PHPStan with docblock validation rules in phpstan.neon - enable checkMissingIterableValueType, checkGenericClassInNonGenericObjectType, and reportUnmatchedIgnoredErrors. Add custom rules for @param, @return, @throws validation. 2) Configure PHP CS Fixer with documentation-specific rules: phpdoc_align, phpdoc_annotation_without_dot, phpdoc_indent, phpdoc_no_access, phpdoc_no_empty_return, phpdoc_order, phpdoc_return_self_reference, phpdoc_scalar, phpdoc_separation, phpdoc_summary, phpdoc_to_comment, phpdoc_trim, phpdoc_types, phpdoc_var_without_name. 3) Create standardized docblock templates in docs/phpdoc-templates.md covering class headers (@package XGate\SDK, @author, @since), method documentation (@param type $name description, @return type description, @throws ExceptionClass when condition), property documentation (@var type description), and @example blocks. 4) Configure IDE helpers: create .phpstorm.meta.php for PhpStorm type hints, configure psalm.xml for static analysis. 5) Document PHPDoc standards in README.md section covering required annotations, type declarations, description formats, and example usage patterns. Include pre-commit hooks configuration to validate documentation before commits.
+
+# Test Strategy:
+Validate PHPStan configuration by running analysis on existing code and ensuring docblock violations are detected. Test PHP CS Fixer rules by running fixer on sample code with documentation issues and verifying corrections. Create sample classes following the templates and verify IDE autocompletion works correctly in PhpStorm/VSCode. Run documentation generation tools (phpDocumentor) to ensure templates produce clean output. Test pre-commit hooks by attempting commits with missing or malformed docblocks. Verify that all configured tools integrate properly with CI/CD pipeline and provide meaningful error messages for documentation violations.
+
+# Subtasks:
+## 1. Configure PHPStan with Docblock Validation [pending]
+### Dependencies: None
+### Description: Set up PHPStan to perform strict validation of PHPDoc annotations as analyzable type contracts to catch logic errors and improve code safety.
+### Details:
+Install PHPStan and configure its settings to enable strict PHPDoc validation, including parameters like 'treatPhpDocTypesAsCertain' and custom rules for docblock patterns. Integrate PHPStan with the IDE for real-time feedback.
+
+## 2. Set Up PHP CS Fixer Rules for Documentation [pending]
+### Dependencies: 11.1
+### Description: Create and configure PHP CS Fixer rules specifically targeting docblock formatting and documentation style enforcement.
+### Details:
+Create a PHP CS Fixer configuration file with rules that enforce consistent docblock styles, such as spacing, alignment, and annotation order. Ensure the configuration supports team-wide style consistency.
+
+## 3. Create Standardized Docblock Templates [pending]
+### Dependencies: 11.1, 11.2
+### Description: Develop reusable and standardized docblock templates to be used across the codebase for consistent documentation.
+### Details:
+Define templates for common docblock patterns including function signatures, variable types, and class descriptions that align with PHPStan validation and PHP CS Fixer rules.
+
+## 4. Configure IDE Helpers for Docblock and PHPStan Integration [pending]
+### Dependencies: 11.1, 11.3
+### Description: Set up IDE plugins and helpers to support PHPStan validation and docblock templates for improved developer experience.
+### Details:
+Install and configure IDE extensions (e.g., PhpStorm) to recognize PHPStan annotations and provide code completion, inline validation, and template insertion for docblocks.
+
+## 5. Document Standards and Implement Pre-commit Hooks [pending]
+### Dependencies: 11.2, 11.3, 11.4
+### Description: Write documentation for the established docblock and code style standards and enforce them using pre-commit hooks.
+### Details:
+Create comprehensive documentation outlining the docblock standards and tooling setup. Configure git pre-commit hooks to run PHPStan and PHP CS Fixer checks to prevent non-compliant commits.
+

@@ -1,0 +1,37 @@
+# Task ID: 8
+# Title: Implement Fiat Deposit and Withdrawal Resources
+# Status: pending
+# Dependencies: 5, 6, 7
+# Priority: medium
+# Description: Create DepositResource and WithdrawResource for fiat operations with comprehensive PHPDoc documentation.
+# Details:
+Implement DepositResource for listing currencies and creating deposits. Implement WithdrawResource for listing currencies and creating withdrawals. Use Transaction model for data. Validate input with Symfony Validator. Include complete PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and descriptions; @example annotations for deposit and withdrawal operations. Use PHP 8.1+ types and detailed docblocks for transaction data structures and currency arrays.
+
+# Test Strategy:
+Test listing currencies and deposit/withdrawal creation using mocked API responses. Validate input validation rules, error handling, and model serialization with unit tests. Use mock HTTP responses to simulate all transaction scenarios. Verify PHPDoc quality and IDE autocompletion for transaction methods.
+
+# Subtasks:
+## 1. Implement DepositResource [pending]
+### Dependencies: None
+### Description: Develop the DepositResource class to handle deposit transactions, including currency listing, input validation, and error handling.
+### Details:
+Create methods for receiving deposit requests, validating input data such as amount and currency, processing the deposit transaction, and returning appropriate responses with error handling using try-catch blocks.
+
+## 2. Implement WithdrawResource [pending]
+### Dependencies: None
+### Description: Develop the WithdrawResource class to handle withdrawal transactions, including currency listing, input validation, and error handling.
+### Details:
+Create methods for receiving withdrawal requests, validating input data such as amount and currency, processing the withdrawal transaction, and returning appropriate responses with error handling using try-catch blocks.
+
+## 3. Develop Transaction Model with Validation [pending]
+### Dependencies: None
+### Description: Create the Transaction model class that represents transactions and includes validation logic to ensure data integrity.
+### Details:
+Define properties for transaction attributes (amount, currency, type, date, etc.), implement validation rules for these properties, and ensure secure handling of data to prevent invalid transactions. Use namespaces and adhere to PSR standards for maintainability.
+
+## 4. Write PHPDoc Documentation with Examples [pending]
+### Dependencies: 8.1, 8.2, 8.3
+### Description: Document the DepositResource, WithdrawResource, and Transaction model classes using comprehensive PHPDoc comments including usage examples.
+### Details:
+Add PHPDoc blocks to all classes, methods, and properties describing their purpose, parameters, return types, exceptions thrown, and provide example code snippets demonstrating typical usage scenarios. Follow PHPDoc standards for clarity and maintainability.
+

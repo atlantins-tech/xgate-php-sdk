@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: Implement Customer Resource and Model
+# Status: pending
+# Dependencies: 5
+# Priority: medium
+# Description: Develop CustomerResource for client management and Customer model for data representation with comprehensive PHPDoc documentation.
+# Details:
+Create CustomerResource class for API calls (create, get). Use Symfony Validator (^6.0) for data validation. Implement Customer model with required fields (id, name, email, document, phone, createdAt, updatedAt). Include complete PHPDoc documentation: class docblocks with @package, @author; method docblocks with @param (types and descriptions), @return (type and description), @throws for exceptions; property docblocks with @var and field descriptions; @example annotations for customer creation and retrieval. Use PHP 8.1+ types and detailed docblocks for model properties and validation rules.
+
+# Test Strategy:
+Test customer creation and retrieval using mocked HTTP responses. Validate model serialization, data validation rules, and error messages with unit tests. Use mock HTTP client to simulate API responses without real API calls. Verify PHPDoc quality and IDE autocompletion functionality.
