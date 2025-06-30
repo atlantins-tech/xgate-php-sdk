@@ -102,6 +102,20 @@ class ConfigurationManager
     private array $proxySettings = [];
 
     /**
+     * URL do proxy
+     * 
+     * @var string|null
+     */
+    private ?string $proxyUrl = null;
+
+    /**
+     * Autenticação do proxy (username:password)
+     * 
+     * @var string|null
+     */
+    private ?string $proxyAuth = null;
+
+    /**
      * Indica se as configurações foram validadas
      *
      * @var bool
@@ -189,6 +203,10 @@ class ConfigurationManager
             $this->proxySettings = $this->parseJsonEnvVar($proxySettings, 'XGATE_PROXY_SETTINGS');
         }
 
+        // Carrega configurações individuais de proxy
+        $this->proxyUrl = $this->getEnvVar('XGATE_PROXY_URL');
+        $this->proxyAuth = $this->getEnvVar('XGATE_PROXY_AUTH');
+
         $this->isValidated = false;
     }
 
@@ -208,6 +226,8 @@ class ConfigurationManager
         $this->logFile = $config['log_file'] ?? $this->logFile;
         $this->customHeaders = $config['custom_headers'] ?? $this->customHeaders;
         $this->proxySettings = $config['proxy_settings'] ?? $this->proxySettings;
+        $this->proxyUrl = $config['proxy_url'] ?? $this->proxyUrl;
+        $this->proxyAuth = $config['proxy_auth'] ?? $this->proxyAuth;
 
         $this->isValidated = false;
     }
@@ -351,7 +371,52 @@ class ConfigurationManager
      */
     public function getProxySettings(): array
     {
+        $this->ensureValidated();
         return $this->proxySettings;
+    }
+
+    /**
+     * Retorna o número de tentativas de retry
+     * 
+     * @return int
+     */
+    public function getRetryAttempts(): int
+    {
+        $this->ensureValidated();
+        return $this->maxRetries;
+    }
+
+    /**
+     * Retorna os headers personalizados
+     * 
+     * @return array<string, string>
+     */
+    public function getHeaders(): array
+    {
+        $this->ensureValidated();
+        return $this->customHeaders;
+    }
+
+    /**
+     * Retorna a URL do proxy
+     * 
+     * @return string|null
+     */
+    public function getProxyUrl(): ?string
+    {
+        $this->ensureValidated();
+        return $this->proxyUrl;
+    }
+
+    /**
+     * Retorna as credenciais de autenticação do proxy
+     * 
+     * @return string|null
+     */
+    public function getProxyAuth(): ?string
+    {
+        $this->ensureValidated();
+        return $this->proxyAuth;
     }
 
     /**

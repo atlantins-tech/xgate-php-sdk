@@ -312,6 +312,7 @@ class ConfigurationManagerTest extends TestCase
      */
     public function testBooleanEnvironmentVariables(): void
     {
+        /** @var array<string, bool> */
         $testCases = [
             'true' => true,
             '1' => true,
@@ -380,6 +381,7 @@ class ConfigurationManagerTest extends TestCase
      */
     private function clearEnvironmentVariables(): void
     {
+        /** @var array<string> */
         $envVars = [
             'XGATE_API_KEY',
             'XGATE_BASE_URL',
