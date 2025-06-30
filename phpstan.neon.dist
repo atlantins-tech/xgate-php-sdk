@@ -5,9 +5,13 @@ parameters:
         - tests
     excludePaths:
         - src/Examples
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         # Ignore missing property type declarations in test files
-        - '#Property .* has no type specified#' 
+        - '#Property .* has no type specified#'
+        # Ignore missing array typehints
+        -
+            identifier: missingType.iterableValue
+        # Ignore missing generic typehints
+        -
+            identifier: missingType.generics 
