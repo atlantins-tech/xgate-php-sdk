@@ -1,0 +1,1 @@
+{"version":1,"defects":[],"times":{"XGate\\Tests\\XGateClientTest::testCanInstantiateXGateClient":0,"XGate\\Tests\\XGateClientTest::testGetVersionReturnsString":0.001,"XGate\\Tests\\XGateClientTest::testVersionFormat":0.002}}
