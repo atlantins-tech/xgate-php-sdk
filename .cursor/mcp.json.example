@@ -1,0 +1,23 @@
+{
+	"mcpServers": {
+		"task-master-ai": {
+			"command": "npx",
+			"args": ["-y", "--package=task-master-ai", "task-master-ai"],
+			"env": {
+                "ANTHROPIC_API_KEY": "sua_anthropic_api_key_aqui",
+                "PERPLEXITY_API_KEY": "sua_perplexity_api_key_aqui",
+                "OPENAI_API_KEY": "sua_openai_api_key_aqui",
+                "GOOGLE_API_KEY": "sua_google_api_key_aqui",
+                "XAI_API_KEY": "sua_xai_api_key_aqui",
+                "OPENROUTER_API_KEY": "sua_openrouter_api_key_aqui",
+                "MISTRAL_API_KEY": "sua_mistral_api_key_aqui",
+                "AZURE_OPENAI_API_KEY": "sua_azure_openai_api_key_aqui",
+                "OLLAMA_API_KEY": "sua_ollama_api_key_aqui"
+            }
+		},
+		"context7": {
+			"command": "npx",
+			"args": ["-y", "@upstash/context7-mcp"]
+		}
+	}
+} 
