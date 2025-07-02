@@ -100,56 +100,38 @@ class HttpClient
     }
 
     /**
-     * Configura o cliente Guzzle com middleware e handlers
-     *
-     * @return void
+     * Configura o cliente HTTP com middlewares e configurações
      */
     private function setupClient(): void
     {
         $stack = HandlerStack::create();
 
-        // Adiciona apenas middlewares essenciais
-        $stack->push($this->createAuthenticationMiddleware(), 'authentication');
-
-        // Adiciona logging apenas se debug estiver habilitado
+        // Middleware de logging (apenas se debug habilitado)
         if ($this->config->isDebugMode()) {
             $stack->push($this->createLoggingMiddleware(), 'logging');
         }
 
+        // Middleware de tratamento de erros removido - lógica agora está em executeRequest()
+
+        // Configuração do cliente
         $clientConfig = [
-            'handler' => $stack,
             'base_uri' => $this->config->getBaseUrl(),
+            'handler' => $stack,
             'timeout' => $this->config->getTimeout(),
-            'connect_timeout' => $this->config->getTimeout() / 2,
-            'headers' => array_merge($this->defaultHeaders, $this->config->getHeaders()),
+            'headers' => array_merge([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'User-Agent' => 'XGATE-PHP-SDK/1.0.0',
+            ], $this->config->getCustomHeaders()),
         ];
 
-        // Configura proxy se disponível
-        if ($this->config->getProxyUrl()) {
-            $clientConfig['proxy'] = $this->buildProxyConfig();
+        // Configurações de proxy se disponíveis
+        $proxyConfig = $this->buildProxyConfig();
+        if (!empty($proxyConfig)) {
+            $clientConfig = array_merge($clientConfig, $proxyConfig);
         }
 
         $this->client = new Client($clientConfig);
-    }
-
-    /**
-     * Cria middleware de autenticação
-     *
-     * Injeta automaticamente o token de autenticação nas requisições
-     *
-     * @return callable
-     */
-    private function createAuthenticationMiddleware(): callable
-    {
-        return Middleware::mapRequest(function (RequestInterface $request): RequestInterface {
-            $apiKey = $this->config->getApiKey();
-
-            if (!empty($apiKey)) {
-                return $request->withHeader('Authorization', 'Bearer ' . $apiKey);
-            }
-
-            return $request;
-        });
     }
 
     /**
@@ -223,7 +205,7 @@ class HttpClient
             return;
         }
 
-        $this->logger->info('HTTP Response', [
+        $this->logger->debug('HTTP Response', [
             'method' => $request->getMethod(),
             'uri' => (string) $request->getUri(),
             'status_code' => $response->getStatusCode(),
@@ -254,6 +236,49 @@ class HttpClient
     }
 
     /**
+     * Cria middleware para tratamento de erros HTTP
+     *
+     * @return callable
+     */
+    private function createErrorHandlingMiddleware(): callable
+    {
+        return function (callable $handler): callable {
+            return function (RequestInterface $request, array $options) use ($handler): PromiseInterface {
+                return $handler($request, $options)->then(
+                    function (ResponseInterface $response) use ($request): ResponseInterface {
+                        // Verifica se é um erro HTTP
+                        if ($response->getStatusCode() >= 400) {
+                            throw $this->createApiException($request, $response);
+                        }
+
+                        return $response;
+                    },
+                    function ($reason) use ($request) {
+                        // Captura exceções do Guzzle e converte para nossas exceções
+                        if ($reason instanceof RequestException) {
+                            $response = $reason->getResponse();
+                            
+                            if ($response !== null) {
+                                // Se há resposta, é um erro da API
+                                throw $this->createApiException($request, $response, $reason);
+                            }
+                            
+                            // Sem resposta, é erro de rede
+                            throw new NetworkException(
+                                "Erro de rede: {$reason->getMessage()}",
+                                $reason->getCode(),
+                                $reason
+                            );
+                        }
+
+                        throw $reason;
+                    }
+                );
+            };
+        };
+    }
+
+    /**
      * Cria exceção específica baseada na resposta da API
      *
      * Este método serve como factory para diferentes tipos de exceção,
@@ -265,7 +290,7 @@ class HttpClient
      * 
      * @return ApiException|ValidationException|RateLimitException
      */
-    private function createApiException(RequestInterface $request, ResponseInterface $response, ?\Throwable $previous = null): ApiException
+    private function createApiException(RequestInterface $request, ResponseInterface $response, ?\Throwable $previous = null): ApiException|ValidationException|RateLimitException
     {
         $statusCode = $response->getStatusCode();
         $body = (string) $response->getBody();
@@ -375,8 +400,7 @@ class HttpClient
 
         return RateLimitException::fromHttpResponse(
             $response,
-            "Rate limit exceeded: {$errorMessage}",
-            $previous
+            "Rate limit exceeded: {$errorMessage}"
         );
     }
 
@@ -524,7 +548,7 @@ class HttpClient
 
                         // Se ainda há tentativas, aguarda o tempo recomendado e tenta novamente
                         if ($attempts < $maxAttempts) {
-                            $retryAfter = $rateLimitException->getRetryAfterSeconds();
+                            $retryAfter = $rateLimitException->getRetryAfter();
                             if ($retryAfter > 0 && $retryAfter <= 60) { // Máximo 60 segundos de espera
                                 $this->logger->info("Rate limit hit, waiting {$retryAfter} seconds before retry", [
                                     'attempt' => $attempts,

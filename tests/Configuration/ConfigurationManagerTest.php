@@ -44,7 +44,6 @@ class ConfigurationManagerTest extends TestCase
     public function testFromArrayWithValidConfiguration(): void
     {
         $config = [
-            'api_key' => 'test_api_key_12345678901234567890123456789012',
             'environment' => 'development',
             'debug_mode' => true,
             'timeout' => 60,
@@ -53,13 +52,13 @@ class ConfigurationManagerTest extends TestCase
 
         $manager = ConfigurationManager::fromArray($config);
 
-        $this->assertEquals($config['api_key'], $manager->getApiKey());
         $this->assertEquals($config['environment'], $manager->getEnvironment());
         $this->assertEquals($config['debug_mode'], $manager->isDebugMode());
         $this->assertEquals($config['timeout'], $manager->getTimeout());
         $this->assertEquals($config['max_retries'], $manager->getMaxRetries());
         $this->assertTrue($manager->isDevelopment());
         $this->assertFalse($manager->isProduction());
+        $this->assertNull($manager->getApiKey()); // API key opcional
     }
 
     /**
@@ -105,7 +104,6 @@ class ConfigurationManagerTest extends TestCase
      */
     public function testLoadCustomHeadersFromEnvironment(): void
     {
-        $_ENV['XGATE_API_KEY'] = 'test_api_key_12345678901234567890123456789012';
         $_ENV['XGATE_CUSTOM_HEADERS'] = '{"User-Agent":"XGATE-SDK/1.0","X-Custom":"value"}';
 
         $manager = new ConfigurationManager();
@@ -124,7 +122,6 @@ class ConfigurationManagerTest extends TestCase
      */
     public function testLoadProxySettingsFromEnvironment(): void
     {
-        $_ENV['XGATE_API_KEY'] = 'test_api_key_12345678901234567890123456789012';
         $_ENV['XGATE_PROXY_SETTINGS'] = '{"host":"proxy.example.com","port":8080,"username":"user"}';
 
         $manager = new ConfigurationManager();
@@ -144,38 +141,12 @@ class ConfigurationManagerTest extends TestCase
      */
     public function testInvalidJsonInEnvironmentVariable(): void
     {
-        $_ENV['XGATE_API_KEY'] = 'test_api_key_12345678901234567890123456789012';
         $_ENV['XGATE_CUSTOM_HEADERS'] = 'invalid-json';
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('contém JSON inválido');
 
         new ConfigurationManager();
-    }
-
-    /**
-     * Testa validação de API Key obrigatória
-     */
-    public function testValidationRequiresApiKey(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('API Key é obrigatória');
-
-        $manager = new ConfigurationManager(null, false);
-        $manager->validate();
-    }
-
-    /**
-     * Testa validação de formato de API Key
-     */
-    public function testValidationApiKeyFormat(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('API Key possui formato inválido');
-
-        $manager = ConfigurationManager::fromArray([
-            'api_key' => 'short_key', // Menos de 32 caracteres
-        ]);
     }
 
     /**
@@ -187,7 +158,6 @@ class ConfigurationManagerTest extends TestCase
         $this->expectExceptionMessage('Base URL inválida');
 
         ConfigurationManager::fromArray([
-            'api_key' => 'test_api_key_12345678901234567890123456789012',
             'base_url' => 'invalid-url',
         ]);
     }
@@ -201,7 +171,6 @@ class ConfigurationManagerTest extends TestCase
         $this->expectExceptionMessage('Ambiente deve ser "development" ou "production"');
 
         ConfigurationManager::fromArray([
-            'api_key' => 'test_api_key_12345678901234567890123456789012',
             'environment' => 'staging',
         ]);
     }
@@ -215,7 +184,6 @@ class ConfigurationManagerTest extends TestCase
         $this->expectExceptionMessage('Timeout deve estar entre 1 e 300 segundos');
 
         ConfigurationManager::fromArray([
-            'api_key' => 'test_api_key_12345678901234567890123456789012',
             'timeout' => 500, // Muito alto
         ]);
     }
@@ -229,21 +197,19 @@ class ConfigurationManagerTest extends TestCase
         $this->expectExceptionMessage('Max retries deve estar entre 0 e 10');
 
         ConfigurationManager::fromArray([
-            'api_key' => 'test_api_key_12345678901234567890123456789012',
             'max_retries' => 15, // Muito alto
         ]);
     }
 
     /**
-     * Testa acesso a API Key sem validação
+     * Testa acesso a API Key sem validação (agora permitido)
      */
     public function testGetApiKeyWithoutValidation(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Configurações devem ser validadas antes do uso');
-
         $manager = new ConfigurationManager(null, false);
-        $manager->getApiKey();
+        
+        // API key é opcional e pode ser acessada sem validação
+        $this->assertNull($manager->getApiKey());
     }
 
     /**
@@ -251,9 +217,7 @@ class ConfigurationManagerTest extends TestCase
      */
     public function testDefaultValues(): void
     {
-        $manager = ConfigurationManager::fromArray([
-            'api_key' => 'test_api_key_12345678901234567890123456789012',
-        ]);
+        $manager = ConfigurationManager::fromArray([]);
 
         $this->assertEquals('https://api.xgate.global', $manager->getBaseUrl());
         $this->assertEquals('production', $manager->getEnvironment());
@@ -265,6 +229,7 @@ class ConfigurationManagerTest extends TestCase
         $this->assertEmpty($manager->getProxySettings());
         $this->assertTrue($manager->isProduction());
         $this->assertFalse($manager->isDevelopment());
+        $this->assertNull($manager->getApiKey()); // API key é opcional
     }
 
     /**
@@ -279,7 +244,7 @@ class ConfigurationManagerTest extends TestCase
 
         $array = $manager->toArray(false);
 
-        // API Key deve estar mascarada
+        // API Key deve estar mascarada quando fornecida
         $this->assertStringContainsString('***', $array['api_key']);
         $this->assertStringNotContainsString('test_api_key_12345678901234567890123456789012', $array['api_key']);
 
@@ -302,9 +267,27 @@ class ConfigurationManagerTest extends TestCase
 
         $array = $manager->toArray(true);
 
-        // Dados sensíveis devem estar visíveis
+        // Dados sensíveis devem estar visíveis quando solicitados
         $this->assertEquals($apiKey, $array['api_key']);
         $this->assertEquals($proxyPassword, $array['proxy_settings']['password']);
+    }
+
+    /**
+     * Testa conversão para array sem API key
+     */
+    public function testToArrayWithoutApiKey(): void
+    {
+        $manager = ConfigurationManager::fromArray([
+            'environment' => 'development',
+            'debug_mode' => true,
+        ]);
+
+        $array = $manager->toArray(false);
+
+        // API key deve ser null quando não fornecida
+        $this->assertNull($array['api_key']);
+        $this->assertEquals('development', $array['environment']);
+        $this->assertTrue($array['debug_mode']);
     }
 
     /**
@@ -326,7 +309,6 @@ class ConfigurationManagerTest extends TestCase
         ];
 
         foreach ($testCases as $value => $expected) {
-            $_ENV['XGATE_API_KEY'] = 'test_api_key_12345678901234567890123456789012';
             $_ENV['XGATE_DEBUG'] = $value;
 
             $manager = new ConfigurationManager();
@@ -343,13 +325,14 @@ class ConfigurationManagerTest extends TestCase
      */
     public function testConstructorWithoutAutoload(): void
     {
-        $_ENV['XGATE_API_KEY'] = 'test_api_key_12345678901234567890123456789012';
-
         $manager = new ConfigurationManager(null, false);
 
-        // Não deve ter carregado as variáveis de ambiente
-        $this->expectException(RuntimeException::class);
-        $manager->getApiKey();
+        // API key é opcional e pode ser acessada sem validação
+        $this->assertNull($manager->getApiKey());
+        
+        // Configurações padrão devem estar disponíveis
+        $this->assertEquals('https://api.xgate.global', $manager->getBaseUrl());
+        $this->assertEquals('production', $manager->getEnvironment());
     }
 
     /**
@@ -358,7 +341,6 @@ class ConfigurationManagerTest extends TestCase
     public function testReloadConfiguration(): void
     {
         // Primeira configuração
-        $_ENV['XGATE_API_KEY'] = 'first_api_key_12345678901234567890123456789012';
         $_ENV['XGATE_ENVIRONMENT'] = 'development';
 
         $manager = new ConfigurationManager();
@@ -373,6 +355,35 @@ class ConfigurationManagerTest extends TestCase
         $manager->loadFromEnvironment();
         $manager->validate();
 
+        $this->assertEquals('production', $manager->getEnvironment());
+    }
+
+    /**
+     * Testa validação de formato de API Key (apenas se fornecida)
+     */
+    public function testValidationApiKeyFormat(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('API Key possui formato inválido');
+
+        $manager = ConfigurationManager::fromArray([
+            'api_key' => 'short_key', // Menos de 32 caracteres
+        ]);
+    }
+
+    /**
+     * Testa configuração de produção
+     */
+    public function testProductionConfiguration(): void
+    {
+        $manager = ConfigurationManager::fromArray([
+            'environment' => 'production',
+            'debug_mode' => false,
+        ]);
+
+        $this->assertTrue($manager->isProduction());
+        $this->assertFalse($manager->isDevelopment());
+        $this->assertFalse($manager->isDebugMode());
         $this->assertEquals('production', $manager->getEnvironment());
     }
 

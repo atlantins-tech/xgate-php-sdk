@@ -398,4 +398,22 @@ class ApiException extends XGateException
 
         return $result;
     }
+
+    /**
+     * Define a resposta HTTP (para uso interno)
+     *
+     * @param ResponseInterface $response
+     * @return void
+     */
+    public function setResponse(ResponseInterface $response): void
+    {
+        $this->response = $response;
+        $this->responseBody = (string) $response->getBody();
+        $this->errorData = $this->parseErrorData();
+        
+        // Extrai informações de rate limiting se aplicável
+        if (method_exists($this, 'extractRateLimitInfo')) {
+            $this->extractRateLimitInfo();
+        }
+    }
 }

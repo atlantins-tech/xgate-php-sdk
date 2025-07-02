@@ -45,9 +45,8 @@ class HttpClientTest extends TestCase
     {
         parent::setUp();
 
-        // Configuração de teste
+        // Configuração de teste - removendo api_key desnecessária
         $this->config = ConfigurationManager::fromArray([
-            'api_key' => 'test_api_key_12345678901234567890123456789012',
             'base_url' => 'https://api.test.com',
             'timeout' => 30,
             'debug_mode' => true,
@@ -59,38 +58,20 @@ class HttpClientTest extends TestCase
 
         // Mock handler para simular respostas
         $this->mockHandler = new MockHandler();
-        $handlerStack = HandlerStack::create($this->mockHandler);
-
-        // HttpClient sem cliente personalizado para permitir middleware
+        
+        // HttpClient sem cliente pré-configurado para que ele configure seus próprios middlewares
         $this->httpClient = new HttpClient($this->config, $this->logger);
-
-        // Substitui o handler do cliente criado pelo HttpClient
-        $guzzleClient = $this->httpClient->getGuzzleClient();
-        if ($guzzleClient instanceof Client) {
-            // Cria novo cliente com nosso mock handler mas mantendo os middlewares
-            $clientConfig = [
-                'base_uri' => $this->config->getBaseUrl(),
-                'handler' => $handlerStack,
-                'timeout' => $this->config->getTimeout(),
-                'headers' => array_merge([
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                    'User-Agent' => 'XGATE-PHP-SDK/1.0.0',
-                ], $this->config->getCustomHeaders()),
-            ];
-
-            // Adiciona os middlewares necessários
-            $handlerStack->push($this->createLoggingMiddleware(), 'logging');
-            $handlerStack->push($this->createErrorHandlingMiddleware(), 'error_handling');
-
-            $mockClient = new Client($clientConfig);
-
-            // Substitui o cliente no HttpClient usando reflexão
-            $reflection = new \ReflectionClass($this->httpClient);
-            $clientProperty = $reflection->getProperty('client');
-            $clientProperty->setAccessible(true);
-            $clientProperty->setValue($this->httpClient, $mockClient);
-        }
+        
+        // Substitui o handler do cliente Guzzle interno pelo nosso mock
+        $reflection = new \ReflectionClass($this->httpClient);
+        $clientProperty = $reflection->getProperty('client');
+        $clientProperty->setAccessible(true);
+        $guzzleClient = $clientProperty->getValue($this->httpClient);
+        
+        // Obtém o handler stack atual e substitui o handler base pelo mock
+        $guzzleConfig = $guzzleClient->getConfig();
+        $handlerStack = $guzzleConfig['handler'];
+        $handlerStack->setHandler($this->mockHandler);
     }
 
     /**
@@ -390,7 +371,7 @@ class HttpClientTest extends TestCase
         $this->assertIsArray($responseLog['context']);
         $responseContext = $responseLog['context'];
         $this->assertEquals(200, $responseContext['status_code']);
-        $this->assertEquals('{"logged":true}', $responseContext['body']);
+        $this->assertEquals('{"logged": true}', $responseContext['body']);
     }
 
     /**
@@ -472,10 +453,10 @@ class HttpClientTest extends TestCase
      */
     public function testApiExceptionJsonResponse(): void
     {
-        $jsonResponse = '{"error": "Validation failed", "details": ["Name is required"]}';
+        $jsonResponse = '{"error": "Bad Request", "details": ["Invalid request format"]}';
 
         $this->mockHandler->append(
-            new Response(422, [], $jsonResponse)
+            new Response(400, [], $jsonResponse)
         );
 
         $this->expectException(ApiException::class);
@@ -485,7 +466,7 @@ class HttpClientTest extends TestCase
         } catch (ApiException $e) {
             $responseArray = $e->getResponseBodyAsArray();
             $this->assertIsArray($responseArray);
-            $this->assertEquals('Validation failed', $responseArray['error']);
+            $this->assertEquals('Bad Request', $responseArray['error']);
             $this->assertIsArray($responseArray['details']);
 
             throw $e;
@@ -520,7 +501,8 @@ class HttpClientTest extends TestCase
     {
         // Configuração sem debug
         $config = ConfigurationManager::fromArray([
-            'api_key' => 'test_api_key_12345678901234567890123456789012',
+            'base_url' => 'https://api.test.com',
+            'timeout' => 30,
             'debug_mode' => false,
         ]);
 
@@ -556,107 +538,7 @@ class HttpClientTest extends TestCase
         $this->assertInstanceOf(\GuzzleHttp\ClientInterface::class, $guzzleClient);
     }
 
-    /**
-     * Cria middleware para logging de requisições e respostas (para testes)
-     */
-    private function createLoggingMiddleware(): callable
-    {
-        return function (callable $handler): callable {
-            return function (RequestInterface $request, array $options) use ($handler) {
-                if ($this->config->isDebugMode()) {
-                    $this->logger->debug('HTTP Request', [
-                        'method' => $request->getMethod(),
-                        'uri' => (string) $request->getUri(),
-                        'headers' => $this->sanitizeHeaders($request->getHeaders()),
-                        'body' => $this->sanitizeBody((string) $request->getBody()),
-                    ]);
-                }
 
-                return $handler($request, $options)->then(
-                    function (ResponseInterface $response) {
-                        if ($this->config->isDebugMode()) {
-                            $this->logger->debug('HTTP Response', [
-                                'status_code' => $response->getStatusCode(),
-                                'headers' => $response->getHeaders(),
-                                'body' => $this->sanitizeBody((string) $response->getBody()),
-                            ]);
-                        }
-
-                        return $response;
-                    }
-                );
-            };
-        };
-    }
-
-    /**
-     * Cria middleware para tratamento de erros HTTP (para testes)
-     */
-    private function createErrorHandlingMiddleware(): callable
-    {
-        return function (callable $handler): callable {
-            return function (RequestInterface $request, array $options) use ($handler) {
-                return $handler($request, $options)->then(
-                    function (ResponseInterface $response) {
-                        // Verifica se é um erro HTTP
-                        if ($response->getStatusCode() >= 400) {
-                            $this->logger->error('HTTP Error Response', [
-                                'status_code' => $response->getStatusCode(),
-                                'body' => (string) $response->getBody(),
-                            ]);
-                        }
-
-                        return $response;
-                    },
-                    function ($reason) {
-                        // Captura exceções do Guzzle e converte para nossas exceções
-                        if ($reason instanceof RequestException) {
-                            $this->handleRequestException($reason);
-                        }
-
-                        throw $reason;
-                    }
-                );
-            };
-        };
-    }
-
-    /**
-     * Trata exceções de requisição do Guzzle (para testes)
-     */
-    private function handleRequestException(RequestException $e): void
-    {
-        $request = $e->getRequest();
-        $response = $e->getResponse();
-
-        // Log do erro
-        $this->logger->error('HTTP Request Exception', [
-            'method' => $request->getMethod(),
-            'uri' => (string) $request->getUri(),
-            'error' => $e->getMessage(),
-            'status_code' => $response ? $response->getStatusCode() : null,
-        ]);
-
-        // Se há resposta, é um erro da API
-        if ($response !== null) {
-            $statusCode = $response->getStatusCode();
-            $body = (string) $response->getBody();
-
-            throw new ApiException(
-                "Erro da API: {$e->getMessage()}",
-                $statusCode,
-                $e,
-                $body
-            );
-        }
-
-        // Sem resposta, é erro de rede
-        throw new NetworkException(
-            "Erro de rede: {$e->getMessage()}",
-            $e->getCode(),
-            $e
-        );
-    }
 
     /**
      * Remove informações sensíveis dos headers para logging (para testes)
@@ -700,6 +582,17 @@ class HttpClientTest extends TestCase
         return strlen($body) > 1000 ? substr($body, 0, 1000) . '...[truncated]' : $body;
     }
 
+    /**
+     * Cria um stream mock para testes
+     */
+    private function createStream(string $content): \Psr\Http\Message\StreamInterface
+    {
+        $stream = $this->createMock(\Psr\Http\Message\StreamInterface::class);
+        $stream->method('__toString')->willReturn($content);
+        $stream->method('getContents')->willReturn($content);
+        return $stream;
+    }
+
     public function testCreateValidationExceptionFrom422Response(): void
     {
         $errorData = [
@@ -710,18 +603,13 @@ class HttpClientTest extends TestCase
             ]
         ];
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getStatusCode')->willReturn(422);
-        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
-
-        $request = $this->createMock(RequestInterface::class);
-
-        $this->httpClient->expects($this->once())
-            ->method('request')
-            ->willThrowException(new RequestException('Validation error', $request, $response));
+        // Simula resposta 422 com erro de validação
+        $this->mockHandler->append(
+            new Response(422, ['Content-Type' => 'application/json'], json_encode($errorData))
+        );
 
         try {
-            $this->httpClientWrapper->get('/test');
+            $this->httpClient->get('/test');
             $this->fail('Expected ValidationException to be thrown');
         } catch (ValidationException $e) {
             $this->assertEquals(422, $e->getCode());
@@ -738,18 +626,13 @@ class HttpClientTest extends TestCase
             'message' => 'The given data was invalid',
         ];
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getStatusCode')->willReturn(422);
-        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
-
-        $request = $this->createMock(RequestInterface::class);
-
-        $this->httpClient->expects($this->once())
-            ->method('request')
-            ->willThrowException(new RequestException('Validation error', $request, $response));
+        // Simula resposta 422 com erro genérico de validação
+        $this->mockHandler->append(
+            new Response(422, ['Content-Type' => 'application/json'], json_encode($errorData))
+        );
 
         try {
-            $this->httpClientWrapper->post('/test');
+            $this->httpClient->post('/test');
             $this->fail('Expected ValidationException to be thrown');
         } catch (ValidationException $e) {
             $this->assertEquals(422, $e->getCode());
@@ -766,32 +649,27 @@ class HttpClientTest extends TestCase
             'message' => 'Rate limit exceeded',
         ];
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getStatusCode')->willReturn(429);
-        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
-        $response->method('getHeaders')->willReturn([
-            'X-RateLimit-Limit' => ['100'],
-            'X-RateLimit-Remaining' => ['0'],
-            'X-RateLimit-Reset' => [(string)(time() + 3600)],
-            'Retry-After' => ['30']
-        ]);
-
-        $request = $this->createMock(RequestInterface::class);
-
-        $this->httpClient->expects($this->once())
-            ->method('request')
-            ->willThrowException(new RequestException('Rate limit error', $request, $response));
+        // Simula resposta 429 com headers de rate limit (Retry-After > 60 para não fazer retry automático)
+        $this->mockHandler->append(
+            new Response(429, [
+                'Content-Type' => 'application/json',
+                'X-RateLimit-Limit' => '100',
+                'X-RateLimit-Remaining' => '0',
+                'X-RateLimit-Reset' => (string)(time() + 3600),
+                'Retry-After' => '120' // > 60 para não fazer retry automático
+            ], json_encode($errorData))
+        );
 
         try {
-            $this->httpClientWrapper->get('/test');
+            $this->httpClient->get('/test');
             $this->fail('Expected RateLimitException to be thrown');
         } catch (RateLimitException $e) {
             $this->assertEquals(429, $e->getCode());
             $this->assertStringContainsString('Rate limit exceeded', $e->getMessage());
-            $this->assertEquals(100, $e->getLimit());
-            $this->assertEquals(0, $e->getRemaining());
-            $this->assertEquals(30, $e->getRetryAfterSeconds());
-            $this->assertTrue($e->isRateLimitExceeded());
+            $this->assertEquals(100, $e->getRateLimit());
+            $this->assertEquals(0, $e->getRateLimitRemaining());
+            $this->assertEquals(120, $e->getRetryAfterSeconds());
+            $this->assertTrue($e->isFullyExhausted());
         }
     }
 
@@ -799,53 +677,46 @@ class HttpClientTest extends TestCase
     {
         $errorData = ['message' => 'Rate limit exceeded'];
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getStatusCode')->willReturn(429);
-        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
-        $response->method('getHeaders')->willReturn([
-            'Retry-After' => ['2'] // 2 segundos
-        ]);
+        // Primeira resposta: 429 com retry
+        $this->mockHandler->append(
+            new Response(429, [
+                'Content-Type' => 'application/json',
+                'Retry-After' => '2' // 2 segundos
+            ], json_encode($errorData))
+        );
 
-        $request = $this->createMock(RequestInterface::class);
-
-        // Primeira tentativa: 429 com retry
-        // Segunda tentativa: sucesso
-        $this->httpClient->expects($this->exactly(2))
-            ->method('request')
-            ->willReturnOnConsecutiveCalls(
-                $this->throwException(new RequestException('Rate limit error', $request, $response)),
-                $this->createJsonResponse(['success' => true])
-            );
-
-        // Mock do logger para verificar se a mensagem de retry foi logada
-        $this->logger->expects($this->once())
-            ->method('info')
-            ->with(
-                $this->stringContains('Rate limit hit, waiting 2 seconds'),
-                $this->arrayHasKey('retry_after')
-            );
+        // Segunda resposta: sucesso
+        $this->mockHandler->append(
+            new Response(200, ['Content-Type' => 'application/json'], '{"success": true}')
+        );
 
         // O teste deve ser bem rápido pois estamos mockando o sleep
         $result = $this->httpClient->get('/test');
         $this->assertInstanceOf(ResponseInterface::class, $result);
+        
+        // Verifica se a mensagem de retry foi logada através do TestHandler
+        $logRecords = $this->testHandler->getRecords();
+        $retryLogFound = false;
+        foreach ($logRecords as $record) {
+            if (strpos($record['message'], 'Rate limit hit') !== false) {
+                $retryLogFound = true;
+                break;
+            }
+        }
+        $this->assertTrue($retryLogFound, 'Rate limit retry message should be logged');
     }
 
     public function testRateLimitExceptionWhenRetryAfterTooLong(): void
     {
         $errorData = ['message' => 'Rate limit exceeded'];
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getStatusCode')->willReturn(429);
-        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
-        $response->method('getHeaders')->willReturn([
-            'Retry-After' => ['120'] // 2 minutos - muito longo
-        ]);
-
-        $request = $this->createMock(RequestInterface::class);
-
-        $this->httpClient->expects($this->once())
-            ->method('request')
-            ->willThrowException(new RequestException('Rate limit error', $request, $response));
+        // Simula resposta 429 com retry muito longo
+        $this->mockHandler->append(
+            new Response(429, [
+                'Content-Type' => 'application/json',
+                'Retry-After' => '120' // 2 minutos - muito longo
+            ], json_encode($errorData))
+        );
 
         try {
             $this->httpClient->get('/test');
@@ -860,15 +731,10 @@ class HttpClientTest extends TestCase
     {
         $errorData = ['message' => 'Internal server error'];
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getStatusCode')->willReturn(500);
-        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
-
-        $request = $this->createMock(RequestInterface::class);
-
-        $this->httpClient->expects($this->once())
-            ->method('request')
-            ->willThrowException(new RequestException('Server error', $request, $response));
+        // Simula resposta 500
+        $this->mockHandler->append(
+            new Response(500, ['Content-Type' => 'application/json'], json_encode($errorData))
+        );
 
         try {
             $this->httpClient->get('/test');

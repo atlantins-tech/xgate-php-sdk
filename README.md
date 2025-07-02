@@ -36,29 +36,13 @@ Um SDK PHP moderno e robusto para integração com a API da XGATE Global, uma pl
 - ✅ **Rate limiting** com retry automático
 - ✅ **Testes abrangentes** com cobertura completa
 
-## 📦 Instalação
+## 🚀 Instalação e Configuração
 
-### Requisitos
-
-- PHP 8.1 ou superior
-- Extensões PHP: `curl`, `json`, `mbstring`
-- Composer
-
-### Via Composer
+### Instalação via Composer
 
 ```bash
 composer require xgate/php-sdk
 ```
-
-### Instalação Manual
-
-```bash
-git clone https://github.com/xgate/php-sdk.git
-cd php-sdk
-composer install
-```
-
-## ⚙️ Configuração
 
 ### Configuração Básica
 
@@ -68,62 +52,48 @@ composer install
 require_once 'vendor/autoload.php';
 
 use XGate\XGateClient;
+use XGate\Exception\AuthenticationException;
 
-// Configuração básica
+// 1. Inicializar o cliente
 $client = new XGateClient([
-    'api_key' => 'your-api-key',
     'base_url' => 'https://api.xgate.com',
     'environment' => 'production', // ou 'sandbox'
     'timeout' => 30,
     'retry_attempts' => 3,
 ]);
+
+// 2. Autenticar com email e senha
+try {
+    $client->authenticate('seu-email@exemplo.com', 'sua-senha');
+    echo "✅ Autenticado com sucesso!\n";
+} catch (AuthenticationException $e) {
+    echo "❌ Erro de autenticação: " . $e->getMessage() . "\n";
+}
 ```
 
-### Configuração Avançada
+### Configuração com Variáveis de Ambiente
+
+Para maior segurança, use variáveis de ambiente para suas credenciais:
 
 ```php
 <?php
 
-use XGate\XGateClient;
-use XGate\Configuration\ConfigurationManager;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-use Symfony\Component\Cache\Adapter\RedisAdapter;
-use Symfony\Component\Cache\Psr16Cache;
+// .env
+XGATE_EMAIL=seu-email@exemplo.com
+XGATE_PASSWORD=sua-senha
+XGATE_ENVIRONMENT=production
 
-// Logger personalizado
-$logger = new Logger('xgate-sdk');
-$logger->pushHandler(new StreamHandler('logs/xgate.log', Logger::INFO));
-
-// Cache personalizado (Redis)
-$redis = new RedisAdapter(RedisAdapter::createConnection('redis://localhost'));
-$cache = new Psr16Cache($redis);
-
-// Configuração detalhada
-$config = new ConfigurationManager([
-    'api_key' => getenv('XGATE_API_KEY'),
+// Código PHP
+$client = new XGateClient([
     'base_url' => getenv('XGATE_BASE_URL') ?: 'https://api.xgate.com',
-    'environment' => getenv('XGATE_ENV') ?: 'production',
+    'environment' => getenv('XGATE_ENVIRONMENT') ?: 'sandbox',
     'timeout' => 30,
-    'retry_attempts' => 3,
-    'retry_delay' => 1000, // milliseconds
-    'rate_limit_requests' => 100,
-    'rate_limit_window' => 60, // seconds
 ]);
 
-$client = new XGateClient($config, $logger, $cache);
-```
-
-### Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do seu projeto:
-
-```env
-XGATE_API_KEY=your-api-key-here
-XGATE_BASE_URL=https://api.xgate.com
-XGATE_ENV=production
-XGATE_TIMEOUT=30
-XGATE_LOG_LEVEL=info
+$client->authenticate(
+    getenv('XGATE_EMAIL'),
+    getenv('XGATE_PASSWORD')
+);
 ```
 
 ## 🚀 Guia de Início Rápido
@@ -142,12 +112,12 @@ use XGate\Exception\ApiException;
 try {
     // 1. Inicializar o cliente
     $client = new XGateClient([
-        'api_key' => 'your-api-key',
         'base_url' => 'https://api.xgate.com',
+        'environment' => 'sandbox', // usar 'sandbox' para testes
     ]);
 
-    // 2. Autenticar
-    $client->authenticate('user@example.com', 'password123');
+    // 2. Autenticar com suas credenciais
+    $client->authenticate('seu-email@exemplo.com', 'sua-senha');
 
     // 3. Verificar autenticação
     if ($client->isAuthenticated()) {
@@ -266,12 +236,17 @@ use XGate\XGateClient;
 use XGate\Exception\{ApiException, ValidationException, AuthenticationException};
 
 $client = new XGateClient([
-    'api_key' => $_ENV['XGATE_API_KEY'],
-    'api_secret' => $_ENV['XGATE_API_SECRET'],
+    'base_url' => $_ENV['XGATE_BASE_URL'] ?? 'https://api.xgate.com',
     'environment' => $_ENV['XGATE_ENV'] ?? 'sandbox',
     'timeout' => 30,
     'retry_attempts' => 3
 ]);
+
+// Autenticar com credenciais de ambiente
+$client->authenticate(
+    $_ENV['XGATE_EMAIL'],
+    $_ENV['XGATE_PASSWORD']
+);
 
 // Exemplo de fluxo completo para IA
 try {

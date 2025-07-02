@@ -140,6 +140,16 @@ class RateLimitException extends ApiException
     }
 
     /**
+     * Alias para getRetryAfter() - mantém compatibilidade
+     *
+     * @return int|null
+     */
+    public function getRetryAfterSeconds(): ?int
+    {
+        return $this->getRetryAfter();
+    }
+
+    /**
      * Obtém o limite de requisições por período
      *
      * @return int|null
@@ -292,7 +302,7 @@ class RateLimitException extends ApiException
     /**
      * Extrai informações de rate limiting da resposta HTTP
      */
-    private function extractRateLimitInfo(): void
+    public function extractRateLimitInfo(): void
     {
         $response = $this->getResponse();
         if (!$response) {
@@ -492,5 +502,20 @@ class RateLimitException extends ApiException
         ];
 
         return new static($message ?? 'Rate limit exceeded', $info);
+    }
+
+    /**
+     * Cria uma RateLimitException a partir de uma resposta HTTP
+     *
+     * @param ResponseInterface $response Resposta HTTP
+     * @param string|null $message Mensagem personalizada
+     * @return static
+     */
+    public static function fromHttpResponse(ResponseInterface $response, ?string $message = null): static
+    {
+        $exception = new static($message ?? 'Rate limit exceeded');
+        $exception->setResponse($response);
+        
+        return $exception;
     }
 } 

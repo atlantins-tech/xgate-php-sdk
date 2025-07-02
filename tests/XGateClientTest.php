@@ -41,7 +41,6 @@ class XGateClientTest extends TestCase
         $this->config->method('isDebugMode')->willReturn(false);
         $this->config->method('getCustomHeaders')->willReturn([]);
         $this->config->method('getProxySettings')->willReturn([]);
-        $this->config->method('getApiKey')->willReturn('test-api-key');
 
         $this->client = new XGateClient($this->config, $this->logger, $this->cache);
     }
@@ -49,8 +48,9 @@ class XGateClientTest extends TestCase
     public function testConstructorWithArray(): void
     {
         $config = [
-            'api_key' => 'test-key-12345678901234567890123456789012', // API key válida (32+ chars)
             'base_url' => 'https://api.test.com',
+            'environment' => 'development',
+            'timeout' => 30,
         ];
 
         $client = new XGateClient($config);
@@ -72,8 +72,11 @@ class XGateClientTest extends TestCase
         $this->expectException(ApiException::class);
         $this->expectExceptionMessage('Falha ao inicializar configuração');
 
-        // Mock ConfigurationManager constructor to throw exception
-        $invalidConfig = [];
+        // Configuração inválida que realmente causará erro
+        $invalidConfig = [
+            'base_url' => 'invalid-url',
+            'environment' => 'invalid-environment', // Deve ser 'development' ou 'production'
+        ];
         new XGateClient($invalidConfig);
     }
 

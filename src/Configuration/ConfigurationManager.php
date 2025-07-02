@@ -235,17 +235,19 @@ class ConfigurationManager
     /**
      * Valida as configurações carregadas
      *
+     * Verifica se todas as configurações obrigatórias estão presentes
+     * e possuem valores válidos. A API key é opcional já que a autenticação
+     * é feita via email/senha que gera um token de acesso.
+     *
      * @throws InvalidArgumentException Se alguma configuração for inválida
      */
     public function validate(): void
     {
         $errors = [];
 
-        // Valida API Key
-        if (empty($this->apiKey)) {
-            $errors[] = 'API Key é obrigatória (XGATE_API_KEY)';
-        } elseif (!$this->isValidApiKey($this->apiKey)) {
-            $errors[] = 'API Key possui formato inválido';
+        // API Key é opcional - apenas valida formato se fornecida
+        if ($this->apiKey !== null && !$this->isValidApiKey($this->apiKey)) {
+            $errors[] = 'API Key possui formato inválido (deve ter pelo menos 32 caracteres alfanuméricos)';
         }
 
         // Valida Base URL
@@ -281,17 +283,13 @@ class ConfigurationManager
     }
 
     /**
-     * Retorna a chave da API
+     * Retorna a chave da API (opcional)
      *
-     * @return string
-     *
-     * @throws RuntimeException Se a configuração não foi validada
+     * @return string|null A API key se fornecida, null caso contrário
      */
-    public function getApiKey(): string
+    public function getApiKey(): ?string
     {
-        $this->ensureValidated();
-
-        return $this->apiKey ?? '';
+        return $this->apiKey;
     }
 
     /**
@@ -541,11 +539,15 @@ class ConfigurationManager
     /**
      * Mascara a API Key para logs/debug
      *
-     * @return string
+     * @return string|null
      */
-    private function maskApiKey(): string
+    private function maskApiKey(): ?string
     {
-        if ($this->apiKey === null || strlen($this->apiKey) < 8) {
+        if ($this->apiKey === null) {
+            return null;
+        }
+        
+        if (strlen($this->apiKey) < 8) {
             return '***';
         }
 

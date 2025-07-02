@@ -54,8 +54,8 @@ Este documento fornece informações abrangentes para agentes de IA (LLMs) traba
     <component name="ConfigurationManager" type="config" path="src/Configuration/ConfigurationManager.php">
       <description>Gerencia configuração do SDK e configurações de ambiente</description>
       <configuration_keys>
-        <item>api_key</item>
-        <item>api_secret</item>
+        <item>email</item>
+        <item>password</item>
         <item>environment</item>
         <item>timeout</item>
         <item>retries</item>
@@ -147,12 +147,14 @@ use XGate\Client\XGateClient;
 
 // Configuração básica
 $client = new XGateClient([
-    'api_key' => 'sua-api-key',
-    'api_secret' => 'seu-api-secret',
+    'base_url' => 'https://api.xgate.com',
     'environment' => 'sandbox', // ou 'production'
     'timeout' => 30,
     'debug' => true
 ]);
+
+// Autenticar com email e senha
+$client->authenticate('seu-email@exemplo.com', 'sua-senha');
 
 // Testar conexão
 try {
@@ -176,17 +178,20 @@ try {
     <code_example language="php">
       <![CDATA[
 $client = new XGateClient([
-    'api_key' => $_ENV['XGATE_API_KEY'],
-    'api_secret' => $_ENV['XGATE_API_SECRET'],
+    'base_url' => $_ENV['XGATE_BASE_URL'] ?? 'https://api.xgate.com',
     'environment' => $_ENV['XGATE_ENV'] ?? 'sandbox',
     'timeout' => (int)($_ENV['XGATE_TIMEOUT'] ?? 30),
     'debug' => filter_var($_ENV['XGATE_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN)
 ]);
+
+// Autenticar com credenciais de ambiente
+$client->authenticate($_ENV['XGATE_EMAIL'], $_ENV['XGATE_PASSWORD']);
       ]]>
     </code_example>
     <environment_variables>
-      <variable name="XGATE_API_KEY" required="true" description="Chave de autenticação da API"/>
-      <variable name="XGATE_API_SECRET" required="true" description="Segredo de autenticação da API"/>
+      <variable name="XGATE_EMAIL" required="true" description="Email para autenticação"/>
+      <variable name="XGATE_PASSWORD" required="true" description="Senha para autenticação"/>
+      <variable name="XGATE_BASE_URL" required="false" default="https://api.xgate.com" description="URL base da API"/>
       <variable name="XGATE_ENV" required="false" default="sandbox" description="Ambiente (sandbox|production)"/>
       <variable name="XGATE_TIMEOUT" required="false" default="30" description="Timeout da requisição em segundos"/>
       <variable name="XGATE_DEBUG" required="false" default="false" description="Habilitar log de debug"/>
