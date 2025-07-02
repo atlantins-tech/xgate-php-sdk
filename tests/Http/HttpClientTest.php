@@ -19,6 +19,8 @@ use Psr\Http\Message\ResponseInterface;
 use XGate\Configuration\ConfigurationManager;
 use XGate\Exception\ApiException;
 use XGate\Exception\NetworkException;
+use XGate\Exception\ValidationException;
+use XGate\Exception\RateLimitException;
 use XGate\Http\HttpClient;
 
 /**
@@ -696,5 +698,188 @@ class HttpClientTest extends TestCase
 
         // Se não é JSON válido, limita o tamanho
         return strlen($body) > 1000 ? substr($body, 0, 1000) . '...[truncated]' : $body;
+    }
+
+    public function testCreateValidationExceptionFrom422Response(): void
+    {
+        $errorData = [
+            'message' => 'Validation failed',
+            'errors' => [
+                'email' => ['Email is required', 'Email format is invalid'],
+                'amount' => ['Amount must be positive']
+            ]
+        ];
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(422);
+        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
+
+        $request = $this->createMock(RequestInterface::class);
+
+        $this->httpClient->expects($this->once())
+            ->method('request')
+            ->willThrowException(new RequestException('Validation error', $request, $response));
+
+        try {
+            $this->httpClientWrapper->get('/test');
+            $this->fail('Expected ValidationException to be thrown');
+        } catch (ValidationException $e) {
+            $this->assertEquals(422, $e->getCode());
+            $this->assertStringContainsString('Validation failed', $e->getMessage());
+            $this->assertEquals($errorData['errors'], $e->getValidationErrors());
+            $this->assertEquals('email', $e->getFailedField());
+            $this->assertEquals('api_validation', $e->getFailedRule());
+        }
+    }
+
+    public function testCreateValidationExceptionFromGenericValidationError(): void
+    {
+        $errorData = [
+            'message' => 'The given data was invalid',
+        ];
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(422);
+        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
+
+        $request = $this->createMock(RequestInterface::class);
+
+        $this->httpClient->expects($this->once())
+            ->method('request')
+            ->willThrowException(new RequestException('Validation error', $request, $response));
+
+        try {
+            $this->httpClientWrapper->post('/test');
+            $this->fail('Expected ValidationException to be thrown');
+        } catch (ValidationException $e) {
+            $this->assertEquals(422, $e->getCode());
+            $this->assertStringContainsString('The given data was invalid', $e->getMessage());
+            $validationErrors = $e->getValidationErrors();
+            $this->assertArrayHasKey('_general', $validationErrors);
+            $this->assertStringContainsString('The given data was invalid', $validationErrors['_general'][0]);
+        }
+    }
+
+    public function testCreateRateLimitExceptionFrom429Response(): void
+    {
+        $errorData = [
+            'message' => 'Rate limit exceeded',
+        ];
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(429);
+        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
+        $response->method('getHeaders')->willReturn([
+            'X-RateLimit-Limit' => ['100'],
+            'X-RateLimit-Remaining' => ['0'],
+            'X-RateLimit-Reset' => [(string)(time() + 3600)],
+            'Retry-After' => ['30']
+        ]);
+
+        $request = $this->createMock(RequestInterface::class);
+
+        $this->httpClient->expects($this->once())
+            ->method('request')
+            ->willThrowException(new RequestException('Rate limit error', $request, $response));
+
+        try {
+            $this->httpClientWrapper->get('/test');
+            $this->fail('Expected RateLimitException to be thrown');
+        } catch (RateLimitException $e) {
+            $this->assertEquals(429, $e->getCode());
+            $this->assertStringContainsString('Rate limit exceeded', $e->getMessage());
+            $this->assertEquals(100, $e->getLimit());
+            $this->assertEquals(0, $e->getRemaining());
+            $this->assertEquals(30, $e->getRetryAfterSeconds());
+            $this->assertTrue($e->isRateLimitExceeded());
+        }
+    }
+
+    public function testRateLimitRetryLogic(): void
+    {
+        $errorData = ['message' => 'Rate limit exceeded'];
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(429);
+        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
+        $response->method('getHeaders')->willReturn([
+            'Retry-After' => ['2'] // 2 segundos
+        ]);
+
+        $request = $this->createMock(RequestInterface::class);
+
+        // Primeira tentativa: 429 com retry
+        // Segunda tentativa: sucesso
+        $this->httpClient->expects($this->exactly(2))
+            ->method('request')
+            ->willReturnOnConsecutiveCalls(
+                $this->throwException(new RequestException('Rate limit error', $request, $response)),
+                $this->createJsonResponse(['success' => true])
+            );
+
+        // Mock do logger para verificar se a mensagem de retry foi logada
+        $this->logger->expects($this->once())
+            ->method('info')
+            ->with(
+                $this->stringContains('Rate limit hit, waiting 2 seconds'),
+                $this->arrayHasKey('retry_after')
+            );
+
+        // O teste deve ser bem rápido pois estamos mockando o sleep
+        $result = $this->httpClient->get('/test');
+        $this->assertInstanceOf(ResponseInterface::class, $result);
+    }
+
+    public function testRateLimitExceptionWhenRetryAfterTooLong(): void
+    {
+        $errorData = ['message' => 'Rate limit exceeded'];
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(429);
+        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
+        $response->method('getHeaders')->willReturn([
+            'Retry-After' => ['120'] // 2 minutos - muito longo
+        ]);
+
+        $request = $this->createMock(RequestInterface::class);
+
+        $this->httpClient->expects($this->once())
+            ->method('request')
+            ->willThrowException(new RequestException('Rate limit error', $request, $response));
+
+        try {
+            $this->httpClient->get('/test');
+            $this->fail('Expected RateLimitException to be thrown');
+        } catch (RateLimitException $e) {
+            $this->assertEquals(429, $e->getCode());
+            $this->assertEquals(120, $e->getRetryAfterSeconds());
+        }
+    }
+
+    public function testApiExceptionForOtherStatusCodes(): void
+    {
+        $errorData = ['message' => 'Internal server error'];
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(500);
+        $response->method('getBody')->willReturn($this->createStream(json_encode($errorData)));
+
+        $request = $this->createMock(RequestInterface::class);
+
+        $this->httpClient->expects($this->once())
+            ->method('request')
+            ->willThrowException(new RequestException('Server error', $request, $response));
+
+        try {
+            $this->httpClient->get('/test');
+            $this->fail('Expected ApiException to be thrown');
+        } catch (ApiException $e) {
+            $this->assertEquals(500, $e->getCode());
+            $this->assertStringContainsString('Internal server error', $e->getMessage());
+            // Deve ser ApiException genérica, não ValidationException ou RateLimitException
+            $this->assertInstanceOf(ApiException::class, $e);
+            $this->assertNotInstanceOf(ValidationException::class, $e);
+            $this->assertNotInstanceOf(RateLimitException::class, $e);
+        }
     }
 }

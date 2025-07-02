@@ -17,6 +17,8 @@ use Psr\Log\LoggerInterface;
 use XGate\Configuration\ConfigurationManager;
 use XGate\Exception\ApiException;
 use XGate\Exception\NetworkException;
+use XGate\Exception\ValidationException;
+use XGate\Exception\RateLimitException;
 
 /**
  * Cliente HTTP wrapper para Guzzle com middleware avançado
@@ -252,26 +254,130 @@ class HttpClient
     }
 
     /**
-     * Cria exceção de API personalizada
+     * Cria exceção específica baseada na resposta da API
      *
-     * @param RequestInterface $request
-     * @param ResponseInterface $response
-     * @param \Throwable|null $previous
-     * @return ApiException
+     * Este método serve como factory para diferentes tipos de exceção,
+     * analisando o status HTTP e headers para determinar o tipo mais apropriado.
+     *
+     * @param RequestInterface $request Requisição original
+     * @param ResponseInterface $response Resposta da API
+     * @param \Throwable|null $previous Exceção anterior na cadeia
+     * 
+     * @return ApiException|ValidationException|RateLimitException
      */
     private function createApiException(RequestInterface $request, ResponseInterface $response, ?\Throwable $previous = null): ApiException
     {
         $statusCode = $response->getStatusCode();
         $body = (string) $response->getBody();
 
-        // Tenta decodificar JSON para obter mensagem de erro
+        // Tenta decodificar JSON para obter dados de erro
         $errorData = json_decode($body, true);
         $errorMessage = $errorData['message'] ?? $errorData['error'] ?? "HTTP {$statusCode}";
 
-        // Sempre inclui o prefixo "Erro da API:" para consistência
-        $message = "Erro da API: {$errorMessage}";
+        // Factory pattern: cria exceção específica baseada no status code
+        switch ($statusCode) {
+            case 422:
+                return $this->createValidationException($errorData, $errorMessage, $request, $response, $previous);
+            
+            case 429:
+                return $this->createRateLimitException($errorData, $errorMessage, $request, $response, $previous);
+            
+            default:
+                // Para outros códigos, cria ApiException genérica
+                $message = "Erro da API: {$errorMessage}";
+                return new ApiException($message, $request, $response, $previous);
+        }
+    }
 
-        return new ApiException($message, $request, $response, $previous);
+    /**
+     * Cria ValidationException a partir da resposta da API
+     *
+     * @param array<string, mixed>|null $errorData Dados de erro decodificados
+     * @param string $errorMessage Mensagem de erro principal
+     * @param RequestInterface $request Requisição original
+     * @param ResponseInterface $response Resposta da API
+     * @param \Throwable|null $previous Exceção anterior
+     * 
+     * @return ValidationException
+     */
+    private function createValidationException(
+        ?array $errorData, 
+        string $errorMessage, 
+        RequestInterface $request, 
+        ResponseInterface $response, 
+        ?\Throwable $previous
+    ): ValidationException {
+        // Extrai erros de validação estruturados da resposta
+        $validationErrors = [];
+        
+        if (is_array($errorData)) {
+            // Formato padrão: { "errors": { "field": ["error1", "error2"] } }
+            if (isset($errorData['errors']) && is_array($errorData['errors'])) {
+                $validationErrors = $errorData['errors'];
+            }
+            // Formato alternativo: { "validation_errors": { ... } }
+            elseif (isset($errorData['validation_errors']) && is_array($errorData['validation_errors'])) {
+                $validationErrors = $errorData['validation_errors'];
+            }
+            // Formato Laravel: { "errors": { "field": ["error"] }, "message": "..." }
+            elseif (isset($errorData['message']) && stripos($errorData['message'], 'validation') !== false) {
+                // Se há indicação de erro de validação mas sem estrutura, cria erro genérico
+                $validationErrors = ['_general' => [$errorMessage]];
+            }
+        }
+
+        // Se não conseguiu extrair erros estruturados, cria erro genérico
+        if (empty($validationErrors)) {
+            $validationErrors = ['_general' => ['Validation failed: ' . $errorMessage]];
+        }
+
+        // Tenta identificar o primeiro campo com erro
+        $failedField = null;
+        $failedValue = null;
+        if (!empty($validationErrors) && !isset($validationErrors['_general'])) {
+            $failedField = array_key_first($validationErrors);
+        }
+
+        return new ValidationException(
+            message: "Validation failed: {$errorMessage}",
+            validationErrors: $validationErrors,
+            failedField: $failedField,
+            failedValue: $failedValue,
+            failedRule: 'api_validation',
+            code: 422,
+            previous: $previous
+        );
+    }
+
+    /**
+     * Cria RateLimitException a partir da resposta da API
+     *
+     * @param array<string, mixed>|null $errorData Dados de erro decodificados
+     * @param string $errorMessage Mensagem de erro principal
+     * @param RequestInterface $request Requisição original
+     * @param ResponseInterface $response Resposta da API
+     * @param \Throwable|null $previous Exceção anterior
+     * 
+     * @return RateLimitException
+     */
+    private function createRateLimitException(
+        ?array $errorData, 
+        string $errorMessage, 
+        RequestInterface $request, 
+        ResponseInterface $response, 
+        ?\Throwable $previous
+    ): RateLimitException {
+        // Extrai informações de rate limiting dos headers
+        $headers = [];
+        foreach ($response->getHeaders() as $name => $values) {
+            $headers[strtolower($name)] = $values[0] ?? '';
+        }
+
+        return RateLimitException::fromHttpResponse(
+            $response,
+            "Rate limit exceeded: {$errorMessage}",
+            $previous
+        );
     }
 
     /**
@@ -365,6 +471,8 @@ class HttpClient
      * @return ResponseInterface
      * @throws ApiException Em caso de erro da API
      * @throws NetworkException Em caso de erro de rede
+     * @throws ValidationException Em caso de erro de validação (422)
+     * @throws RateLimitException Em caso de rate limiting (429)
      */
     private function executeRequest(string $method, string $uri, array $options = []): ResponseInterface
     {
@@ -404,15 +512,43 @@ class HttpClient
 
                     $statusCode = $response->getStatusCode();
 
-                    // Retry apenas para códigos específicos (429, 503) e se ainda há tentativas
-                    if (in_array($statusCode, [429, 503]) && $attempts < $maxAttempts) {
+                    // Para rate limiting (429), cria exceção específica com informações de retry
+                    if ($statusCode === 429) {
+                        $rateLimitException = $this->createRateLimitException(
+                            json_decode((string) $response->getBody(), true),
+                            'Rate limit exceeded',
+                            $e->getRequest(),
+                            $response,
+                            $e
+                        );
+
+                        // Se ainda há tentativas, aguarda o tempo recomendado e tenta novamente
+                        if ($attempts < $maxAttempts) {
+                            $retryAfter = $rateLimitException->getRetryAfterSeconds();
+                            if ($retryAfter > 0 && $retryAfter <= 60) { // Máximo 60 segundos de espera
+                                $this->logger->info("Rate limit hit, waiting {$retryAfter} seconds before retry", [
+                                    'attempt' => $attempts,
+                                    'max_attempts' => $maxAttempts,
+                                    'retry_after' => $retryAfter
+                                ]);
+                                
+                                sleep($retryAfter);
+                                continue;
+                            }
+                        }
+
+                        // Se não pode mais tentar ou tempo de espera muito longo, lança exceção
+                        throw $rateLimitException;
+                    }
+
+                    // Retry apenas para códigos específicos (503) e se ainda há tentativas
+                    if (in_array($statusCode, [503]) && $attempts < $maxAttempts) {
                         $delay = (int) (1000000 * pow(2, $attempts - 1));
                         usleep($delay);
-
                         continue;
                     }
 
-                    // Para outros códigos de erro, lança exceção imediatamente
+                    // Para outros códigos de erro, lança exceção específica imediatamente
                     throw $this->createApiException($e->getRequest(), $response, $e);
                 }
 
@@ -444,6 +580,8 @@ class HttpClient
      * @return ResponseInterface
      * @throws ApiException Em caso de erro da API
      * @throws NetworkException Em caso de erro de rede
+     * @throws ValidationException Em caso de erro de validação
+     * @throws RateLimitException Em caso de rate limiting
      */
     public function get(string $uri, array $options = []): ResponseInterface
     {
@@ -459,6 +597,8 @@ class HttpClient
      * @return ResponseInterface
      * @throws ApiException Em caso de erro da API
      * @throws NetworkException Em caso de erro de rede
+     * @throws ValidationException Em caso de erro de validação
+     * @throws RateLimitException Em caso de rate limiting
      */
     public function post(string $uri, array $options = []): ResponseInterface
     {
@@ -474,6 +614,8 @@ class HttpClient
      * @return ResponseInterface
      * @throws ApiException Em caso de erro da API
      * @throws NetworkException Em caso de erro de rede
+     * @throws ValidationException Em caso de erro de validação
+     * @throws RateLimitException Em caso de rate limiting
      */
     public function put(string $uri, array $options = []): ResponseInterface
     {
@@ -489,6 +631,8 @@ class HttpClient
      * @return ResponseInterface
      * @throws ApiException Em caso de erro da API
      * @throws NetworkException Em caso de erro de rede
+     * @throws ValidationException Em caso de erro de validação
+     * @throws RateLimitException Em caso de rate limiting
      */
     public function delete(string $uri, array $options = []): ResponseInterface
     {
@@ -504,6 +648,8 @@ class HttpClient
      * @return ResponseInterface
      * @throws ApiException Em caso de erro da API
      * @throws NetworkException Em caso de erro de rede
+     * @throws ValidationException Em caso de erro de validação
+     * @throws RateLimitException Em caso de rate limiting
      */
     public function patch(string $uri, array $options = []): ResponseInterface
     {
@@ -520,6 +666,8 @@ class HttpClient
      * @return ResponseInterface
      * @throws ApiException Em caso de erro da API
      * @throws NetworkException Em caso de erro de rede
+     * @throws ValidationException Em caso de erro de validação
+     * @throws RateLimitException Em caso de rate limiting
      */
     public function request(string $method, string $uri, array $options = []): ResponseInterface
     {

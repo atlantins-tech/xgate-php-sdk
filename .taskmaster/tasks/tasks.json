@@ -469,7 +469,7 @@
         "id": 9,
         "title": "Add Exception Handling and Error Management",
         "description": "Implement custom exceptions and robust error handling across the SDK with complete PHPDoc documentation.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           3,
           4,
@@ -484,8 +484,8 @@
             "title": "Define Custom Exception Classes",
             "description": "Create a hierarchy of custom exception classes extending PHP's base Exception class to represent different error scenarios in the SDK.",
             "dependencies": [],
-            "details": "Design meaningful and specific exception classes (e.g., MissingArgumentException, DatabaseConnectionException) with constructors and optionally override __toString() for custom messages. Include custom methods or properties if needed for additional context.",
-            "status": "pending",
+            "details": "Design meaningful and specific exception classes (e.g., MissingArgumentException, DatabaseConnectionException) with constructors and optionally override __toString() for custom messages. Include custom methods or properties if needed for additional context.\n<info added on 2025-07-01T23:58:40.760Z>\nSUBTASK 9.1 COMPLETED - Custom Exception Classes Implementation\n\nSuccessfully implemented comprehensive custom exception classes with the following achievements:\n\nValidationException Implementation:\n- Extends ApiException with field-specific error tracking\n- Features sensitive data masking for security (passwords, tokens)\n- Supports multiple validation error types (required, format, type, range, pattern)\n- Includes static factory methods and fluent interface for chaining errors\n- Complete PHPDoc documentation with usage examples\n- Test coverage: 25 tests, 90 assertions - ALL PASSING\n\nRateLimitException Implementation:\n- Extends ApiException with sophisticated rate limit handling\n- Extracts rate limit information from multiple HTTP header formats\n- Supports X-RateLimit-*, X-Rate-Limit-*, and RateLimit-* header patterns\n- Includes retry-after logic, timing calculations, and usage percentage tracking\n- Multiple constructor signatures and static factory methods\n- Complete PHPDoc documentation with examples\n- Test coverage: 29 tests, 103 assertions - ALL PASSING\n\nBug Fixes Applied:\n- Replaced str_contains() with stripos() for PHP compatibility\n- Fixed PHPUnit assertions (assertStringContains to assertStringContainsString)\n- Corrected header extraction inconsistencies\n- Fixed property assignment in extractRateLimitInfo() method\n\nException Hierarchy Complete:\n- XGateException (base) - existing\n- AuthenticationException - existing\n- ApiException - existing\n- NetworkException - existing\n- ValidationException - newly implemented\n- RateLimitException - newly implemented\n\nOverall Test Results: 89/89 exception tests passing with 287 total assertions. All custom exception classes are fully implemented with comprehensive features, thorough testing, and complete documentation.\n</info added on 2025-07-01T23:58:40.760Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -495,8 +495,8 @@
             "dependencies": [
               1
             ],
-            "details": "Modify HTTP client and resource classes to throw specific custom exceptions on error conditions (e.g., connection failures, invalid responses). Implement try-catch blocks to handle these exceptions and propagate meaningful error information.",
-            "status": "pending",
+            "details": "Modify HTTP client and resource classes to throw specific custom exceptions on error conditions (e.g., connection failures, invalid responses). Implement try-catch blocks to handle these exceptions and propagate meaningful error information.\n<info added on 2025-07-01T23:59:53.864Z>\nAnalysis completed for HttpClient exception handling integration. Current implementation uses generic ApiException for all error conditions. Enhancement plan includes: updating createApiException() method to serve as factory for specific exception types based on HTTP status codes (ValidationException for 422, RateLimitException for 429), adding input validation methods to resource classes, improving rate limit handling to create proper RateLimitException instances with retry headers, and enriching error context with more specific information while maintaining backward compatibility. Implementation will modify HttpClient.createApiException(), add validation to resources, and enhance executeRequest() for better rate limiting scenarios.\n</info added on 2025-07-01T23:59:53.864Z>\n<info added on 2025-07-02T00:10:36.338Z>\nSUBTASK 9.2 COMPLETED - HTTP Client Integration with Custom Exceptions\n\nSuccessfully integrated custom exception classes into the HTTP client layer with comprehensive enhancements:\n\nHttpClient Enhancements:\n- Enhanced createApiException() to serve as a factory pattern for specific exception types\n- Added intelligent status code detection: 422 → ValidationException, 429 → RateLimitException\n- Implemented createValidationException() method to parse API validation errors from response body\n- Implemented createRateLimitException() method to extract rate limit headers and context\n- Enhanced executeRequest() with intelligent rate limit retry logic\n- Added proper exception type annotations to all HTTP methods (get, post, put, delete, patch)\n\nTest Coverage:\n- Created comprehensive tests for new exception handling scenarios\n- ValidationException creation from 422 responses with proper error parsing\n- RateLimitException creation from 429 responses with header extraction\n- Rate limit retry logic with proper timing and backoff\n- Fallback to generic ApiException for other status codes\n- Fixed test references to use correct HttpClient wrapper instance\n\nBug Fixes:\n- Fixed header extraction inconsistencies between hasHeader and getHeaderLine\n- Corrected test expectations for automatic message generation\n- Ensured proper PSR-7 response object handling\n\nIntegration Results:\n- All exception tests: 89/89 tests passing with 287 assertions\n- HttpClient now properly creates specific exception types based on HTTP status codes\n- Enhanced rate limiting handling with intelligent retry logic\n- Maintains backward compatibility while providing more specific error information\n- Complete exception hierarchy integration across the SDK\n</info added on 2025-07-02T00:10:36.338Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -506,8 +506,8 @@
             "dependencies": [
               2
             ],
-            "details": "Ensure all thrown exceptions carry descriptive and user-friendly messages. Implement centralized error logging or user notification based on exception types. Format error messages for clarity and debugging support.",
-            "status": "pending",
+            "details": "Ensure all thrown exceptions carry descriptive and user-friendly messages. Implement centralized error logging or user notification based on exception types. Format error messages for clarity and debugging support.\n<info added on 2025-07-02T00:11:20.555Z>\nAnalysis completed for Error Message Handling implementation. Current state shows good exception hierarchy with descriptive messages in Portuguese and English, comprehensive logging across Resources and HttpClient, exception classes with toArray() and __toString() methods, sensitive data masking in ValidationException, and context-aware error messages in NetworkException with suggestions.\n\nEnhancement plan includes creating centralized ErrorMessageHandler class for consistent error formatting, implementing standardized error message templates for different scenarios, adding localization support for error messages (PT/EN), enhancing logging with structured error context, creating error notification system for different severity levels, adding error message sanitization for security, and implementing error aggregation for batch operations.\n\nImplementation will focus on centralized error message formatting and localization, enhanced logging with error severity levels, user-friendly error message generation, security-focused error sanitization, and consistent error display across the SDK.\n</info added on 2025-07-02T00:11:20.555Z>\n<info added on 2025-07-02T01:06:20.851Z>\nError Message Handling implementation completed successfully. Comprehensive analysis revealed ErrorMessageHandler.php already fully implemented with 631 lines of code including localization support for English and Portuguese. Created complete test suite with 34 tests covering all functionality including message template generation, sensitive data masking, API error handling, network error patterns, and integration with ValidationException and RateLimitException classes. All 123 exception tests now passing with 361 assertions. Key security features verified: field values excluded from templates by default, sensitive data masking through regex patterns, and message sanitization removing emails, SSNs, and other sensitive patterns. ErrorMessageHandler successfully integrated with existing exception hierarchy providing consistent error formatting across the SDK.\n</info added on 2025-07-02T01:06:20.851Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -519,8 +519,8 @@
               2,
               3
             ],
-            "details": "Write PHPDoc blocks for each class and method explaining purpose, parameters, return types, and thrown exceptions. Include usage examples where applicable to improve maintainability and developer understanding.",
-            "status": "pending",
+            "details": "Write PHPDoc blocks for each class and method explaining purpose, parameters, return types, and thrown exceptions. Include usage examples where applicable to improve maintainability and developer understanding.\n<info added on 2025-07-02T01:06:54.873Z>\n**Starting PHPDoc Documentation Review**\n\nAnalysis Plan:\n1. Review existing PHPDoc documentation in all exception classes\n2. Identify missing or incomplete documentation\n3. Enhance documentation with comprehensive descriptions, parameter details, return types, and thrown exceptions\n4. Add usage examples where applicable\n5. Ensure consistency across all exception classes\n\nException Classes to Review:\n- ValidationException.php (new)\n- RateLimitException.php (new)\n- ErrorMessageHandler.php (existing)\n- HttpClient.php (enhanced exception handling)\n- Base exception classes (XGateException, ApiException, etc.)\n\nStarting with analysis of current documentation state to identify gaps and areas needing enhancement.\n</info added on 2025-07-02T01:06:54.873Z>",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -700,7 +700,7 @@
     ],
     "metadata": {
       "created": "2025-06-30T14:55:19.383Z",
-      "updated": "2025-06-30T23:17:22.353Z",
+      "updated": "2025-07-02T01:21:23.371Z",
       "description": "Tasks for master context"
     }
   }
