@@ -14,6 +14,7 @@ Um SDK PHP moderno e robusto para integração com a API da XGATE Global, uma pl
 - [Guia de Início Rápido](#-guia-de-início-rápido)
 - [Autenticação](#-autenticação)
 - [Funcionalidades da API](#-funcionalidades-da-api)
+- [Integração com Agentes de IA](#-integração-com-agentes-de-ia)
 - [Exemplos de Uso](#-exemplos-de-uso)
 - [Tratamento de Erros](#-tratamento-de-erros)
 - [Logging e Debug](#-logging-e-debug)
@@ -242,6 +243,124 @@ echo "Logout realizado com sucesso!";
 - ✅ **Completo** - Funcionalidade implementada e testada
 - 🔄 **Em desenvolvimento** - Funcionalidade em progresso
 - ⏳ **Planejado** - Funcionalidade planejada
+
+## 🤖 Integração com Agentes de IA
+
+Este SDK foi especialmente otimizado para uso com **agentes de IA e assistentes de código**, oferecendo documentação estruturada em XML e exemplos práticos para facilitar a integração automatizada.
+
+### 📋 Recursos para IA
+
+- ✅ **[LLMs.md](LLMs.md)** - Documentação completa em formato XML para consumo por IA
+- ✅ **Estrutura XML detalhada** com schemas, parâmetros e exemplos
+- ✅ **Padrões de input/output** claramente documentados
+- ✅ **Exemplos de tratamento de erro** com códigos específicos
+- ✅ **Fluxos completos de integração** passo-a-passo
+- ✅ **Melhores práticas de segurança** para desenvolvimento automatizado
+
+### 🚀 Quick Start para IA
+
+```php
+<?php
+// Configuração básica otimizada para agentes de IA
+use XGate\XGateClient;
+use XGate\Exception\{ApiException, ValidationException, AuthenticationException};
+
+$client = new XGateClient([
+    'api_key' => $_ENV['XGATE_API_KEY'],
+    'api_secret' => $_ENV['XGATE_API_SECRET'],
+    'environment' => $_ENV['XGATE_ENV'] ?? 'sandbox',
+    'timeout' => 30,
+    'retry_attempts' => 3
+]);
+
+// Exemplo de fluxo completo para IA
+try {
+    // 1. Criar cliente
+    $customer = $client->customers()->create(
+        name: 'João Silva Santos',
+        email: 'joao.silva@email.com',
+        phone: '+5511987654321',
+        document: '12345678901',
+        documentType: 'cpf'
+    );
+    
+    // 2. Registrar chave PIX
+    $pixKey = $client->pix()->register(
+        type: 'email',
+        key: 'joao.silva@email.com',
+        accountHolderName: 'João Silva Santos',
+        accountHolderDocument: '12345678901'
+    );
+    
+    // 3. Processar depósito
+    $deposit = $client->deposits()->create([
+        'customer_id' => $customer->id,
+        'amount' => '500.00',
+        'currency' => 'BRL',
+        'payment_method' => 'pix'
+    ]);
+    
+    echo "✅ Fluxo concluído: Cliente {$customer->id}, PIX {$pixKey->id}, Depósito {$deposit->id}\n";
+    
+} catch (ValidationException $e) {
+    // Erros de validação - dados de entrada inválidos
+    echo "❌ Validação: " . $e->getMessage() . "\n";
+    foreach ($e->getFieldErrors() as $field => $errors) {
+        echo "  - {$field}: " . implode(', ', $errors) . "\n";
+    }
+} catch (AuthenticationException $e) {
+    // Erros de autenticação - credenciais inválidas
+    echo "❌ Autenticação: " . $e->getMessage() . "\n";
+} catch (ApiException $e) {
+    // Outros erros da API
+    echo "❌ API ({$e->getStatusCode()}): " . $e->getMessage() . "\n";
+    echo "  Código: " . $e->getErrorCode() . "\n";
+}
+```
+
+### 📚 Documentação Específica para IA
+
+| Arquivo | Descrição | Uso Recomendado |
+|---------|-----------|-----------------|
+| **[LLMs.md](LLMs.md)** | Documentação completa em XML | Referência principal para agentes de IA |
+| **[QUICKSTART.md](QUICKSTART.md)** | Guia rápido de implementação | Primeiros passos e configuração básica |
+| **[examples/](examples/)** | Exemplos práticos de código | Casos de uso reais e padrões |
+| **[.vscode/](.vscode/)** | Configuração para VS Code | Integração com editores e IDEs |
+
+### 🔧 Ferramentas de Desenvolvimento
+
+```bash
+# Análise de qualidade (recomendado antes de commits)
+composer quality
+
+# Validação de documentação
+composer docs-validate
+
+# Correção automática de formatação
+composer cs-fix
+
+# Testes com cobertura
+composer test-coverage
+```
+
+### 💡 Dicas para Agentes de IA
+
+1. **Sempre validar entrada** antes de fazer chamadas da API
+2. **Implementar retry com backoff** para operações que falharam  
+3. **Usar tipos específicos de exceção** para tratamento de erro granular
+4. **Consultar LLMs.md** para estruturas XML detalhadas
+5. **Seguir padrões de segurança** documentados para credenciais
+6. **Usar logging estruturado** para debugging e monitoramento
+
+### 🎯 Casos de Uso Comuns para IA
+
+- **E-commerce**: Automação de pagamentos e gestão de clientes
+- **Fintech**: Processamento de transações e compliance
+- **Marketplace**: Gestão de múltiplos vendedores e compradores
+- **SaaS**: Cobrança automatizada e gestão de assinaturas
+- **Mobile Apps**: Integração de pagamentos via API REST
+
+> 📖 **Para documentação completa específica para IA, consulte [LLMs.md](LLMs.md)**
 
 ## 📖 Exemplos de Uso
 
