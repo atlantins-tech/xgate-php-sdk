@@ -57,11 +57,23 @@
         "test": "phpunit",
         "test-coverage": "phpunit --coverage-html coverage",
         "phpstan": "phpstan analyse src tests --level=8",
+        "phpstan-docs": "phpstan analyse src tests --level=8 --configuration=phpstan.neon",
         "cs-fix": "php-cs-fixer fix",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "docs-fix": "php-cs-fixer fix --config=.php-cs-fixer.docs.php --allow-risky=yes",
+        "docs-check": "php-cs-fixer fix --config=.php-cs-fixer.docs.php --dry-run --diff --allow-risky=yes",
+        "docs-validate": [
+            "@docs-check",
+            "@phpstan-docs"
+        ],
         "quality": [
             "@cs-check",
             "@phpstan",
+            "@test"
+        ],
+        "quality-docs": [
+            "@docs-check",
+            "@phpstan-docs",
             "@test"
         ]
     },
