@@ -7,8 +7,8 @@ Este documento fornece informações abrangentes para agentes de IA (LLMs) traba
 ```xml
 <document_info>
   <title>XGATE PHP SDK - Guia de Integração para Agentes de IA</title>
-  <version>1.3.0</version>
-  <last_updated>2025-01-02</last_updated>
+  <version>1.4.0</version>
+  <last_updated>2025-01-06</last_updated>
   <target_audience>Agentes de IA, LLMs, Assistentes de Código</target_audience>
   <sdk_version>^1.0.0</sdk_version>
   <php_version>^8.1</php_version>
@@ -158,6 +158,14 @@ Este documento fornece informações abrangentes para agentes de IA (LLMs) traba
       <rate_limiting>automatic_handling</rate_limiting>
       <error_handling>comprehensive</error_handling>
       <logging>structured_debug</logging>
+    </capability>
+    
+    <capability name="cryptocurrency_support" status="FULLY_FUNCTIONAL">
+      <endpoint>GET /deposit/company/cryptocurrencies</endpoint>
+      <documentation>https://api.xgateglobal.com/pages/crypto/deposit/get-crypto.html</documentation>
+      <supported_currencies>USDT</supported_currencies>
+      <response_time>~388ms</response_time>
+      <validation>100%</validation>
     </capability>
     
     <capability name="testing" status="COMPLETE">
@@ -2097,6 +2105,143 @@ if (!empty($results['failed'])) {
           <line>=== FALHAS DETALHADAS ===</line>
           <line>- Pedro Costa: E-mail já cadastrado</line>
         </batch_processing_log>
+      </expected_output>
+    </step>
+  </example>
+  
+  <example name="cryptocurrency_consultation" type="api_call">
+    <description>Consulta de criptomoedas disponíveis para depósito na plataforma XGATE</description>
+    
+    <step name="list_cryptocurrencies" order="1">
+      <input_data>
+        <parameter name="endpoint" value="GET /deposit/company/cryptocurrencies"/>
+        <parameter name="authentication" value="bearer_token"/>
+        <parameter name="documentation" value="https://api.xgateglobal.com/pages/crypto/deposit/get-crypto.html"/>
+      </input_data>
+      
+      <code_implementation language="php">
+        <![CDATA[
+try {
+    // Obter cliente HTTP autenticado
+    $httpClient = $client->getHttpClient();
+    
+    // Consultar criptomoedas disponíveis para depósito
+    $response = $httpClient->request('GET', '/deposit/company/cryptocurrencies');
+    $cryptocurrencies = json_decode($response->getBody()->getContents(), true);
+    
+    echo "Criptomoedas disponíveis para depósito:\n";
+    echo "Total encontrado: " . count($cryptocurrencies) . "\n\n";
+    
+    foreach ($cryptocurrencies as $crypto) {
+        echo "💰 {$crypto['name']} ({$crypto['symbol']})\n";
+        echo "   ID: {$crypto['_id']}\n";
+        echo "   CoinGecko: {$crypto['coinGecko']}\n";
+        echo "   Criado em: {$crypto['createdDate']}\n";
+        echo "   Atualizado em: {$crypto['updatedDate']}\n\n";
+    }
+    
+    // Salvar resposta para análise posterior
+    $logFile = 'logs/cryptocurrencies_response.json';
+    if (!file_exists(dirname($logFile))) {
+        mkdir(dirname($logFile), 0755, true);
+    }
+    file_put_contents($logFile, json_encode($cryptocurrencies, JSON_PRETTY_PRINT));
+    echo "✅ Resposta salva em: {$logFile}\n";
+    
+} catch (ApiException $e) {
+    echo "❌ Erro da API: " . $e->getMessage() . "\n";
+    echo "   Status Code: " . $e->getStatusCode() . "\n";
+    echo "   Error Code: " . $e->getErrorCode() . "\n";
+} catch (Exception $e) {
+    echo "❌ Erro geral: " . $e->getMessage() . "\n";
+}
+        ]]>
+      </code_implementation>
+      
+      <expected_output>
+        <success_response>
+          <console_output>
+            <line>Criptomoedas disponíveis para depósito:</line>
+            <line>Total encontrado: 1</line>
+            <line></line>
+            <line>💰 USDT (USDT)</line>
+            <line>   ID: 67339b18ca592e9d570e8586</line>
+            <line>   CoinGecko: tether</line>
+            <line>   Criado em: 2024-11-12T18:14:48.979Z</line>
+            <line>   Atualizado em: 2024-11-15T05:53:32.979Z</line>
+            <line></line>
+            <line>✅ Resposta salva em: logs/cryptocurrencies_response.json</line>
+          </console_output>
+          <api_response>
+            <cryptocurrency>
+              <property name="_id" value="67339b18ca592e9d570e8586"/>
+              <property name="name" value="USDT"/>
+              <property name="symbol" value="USDT"/>
+              <property name="coinGecko" value="tether"/>
+              <property name="createdDate" value="2024-11-12T18:14:48.979Z"/>
+              <property name="updatedDate" value="2024-11-15T05:53:32.979Z"/>
+            </cryptocurrency>
+          </api_response>
+        </success_response>
+        <performance_metrics>
+          <authentication_time>276.92ms</authentication_time>
+          <request_time>387.56ms</request_time>
+          <total_time>664.48ms</total_time>
+          <status_code>200</status_code>
+        </performance_metrics>
+      </expected_output>
+    </step>
+    
+    <step name="filter_specific_cryptocurrency" order="2">
+      <input_data>
+        <parameter name="filter_criteria" value="USDT"/>
+        <parameter name="use_case" value="deposit_validation"/>
+      </input_data>
+      
+      <code_implementation language="php">
+        <![CDATA[
+/**
+ * Verifica se uma criptomoeda específica está disponível para depósito
+ */
+function isCryptocurrencyAvailable(string $symbol): bool
+{
+    try {
+        $httpClient = $client->getHttpClient();
+        $response = $httpClient->request('GET', '/deposit/company/cryptocurrencies');
+        $cryptocurrencies = json_decode($response->getBody()->getContents(), true);
+        
+        foreach ($cryptocurrencies as $crypto) {
+            if (strtoupper($crypto['symbol']) === strtoupper($symbol)) {
+                return true;
+            }
+        }
+        
+        return false;
+        
+    } catch (Exception $e) {
+        // Log error and return false for safety
+        error_log("Erro ao consultar criptomoedas: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Exemplo de uso
+$supportedCryptos = ['USDT', 'BTC', 'ETH'];
+
+foreach ($supportedCryptos as $crypto) {
+    $available = isCryptocurrencyAvailable($crypto);
+    $status = $available ? '✅ Disponível' : '❌ Não disponível';
+    echo "{$crypto}: {$status}\n";
+}
+        ]]>
+      </code_implementation>
+      
+      <expected_output>
+        <console_output>
+          <line>USDT: ✅ Disponível</line>
+          <line>BTC: ❌ Não disponível</line>
+          <line>ETH: ❌ Não disponível</line>
+        </console_output>
       </expected_output>
     </step>
   </example>

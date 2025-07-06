@@ -414,6 +414,7 @@ echo "Logout realizado com sucesso!";
 |--------|--------|---------------------|-----------|
 | ✅ **Autenticação** | Completo | ✅ Validada | Login JWT, renovação automática de tokens |
 | ✅ **Clientes** | Completo | ✅ [Criar](https://api.xgateglobal.com/pages/customer/create.html) / [Atualizar](https://api.xgateglobal.com/pages/customer/update.html) | CRUD completo de clientes |
+| ✅ **Criptomoedas** | Completo | ✅ [Consultar](https://api.xgateglobal.com/pages/crypto/deposit/get-crypto.html) | Consulta de criptomoedas disponíveis para depósito |
 | ✅ **PIX** | Completo | ✅ Validada | Criação e gestão de chaves PIX |
 | ✅ **Depósitos** | Completo | ✅ Validada | Criação e consulta de depósitos |
 | ✅ **Saques** | Completo | ✅ Validada | Processamento de saques via PIX |
@@ -618,6 +619,34 @@ try {
     
 } catch (ValidationException $e) {
     echo "Erro de validação: " . $e->getMessage() . "\n";
+} catch (ApiException $e) {
+    echo "Erro da API: " . $e->getMessage() . "\n";
+}
+```
+
+### Consulta de Criptomoedas
+
+```php
+<?php
+
+use XGate\Http\HttpClient;
+
+// Obter cliente HTTP autenticado
+$httpClient = $client->getHttpClient();
+
+try {
+    // Consultar criptomoedas disponíveis para depósito
+    $response = $httpClient->request('GET', '/deposit/company/cryptocurrencies');
+    $cryptocurrencies = json_decode($response->getBody()->getContents(), true);
+    
+    echo "Criptomoedas disponíveis para depósito:\n";
+    foreach ($cryptocurrencies as $crypto) {
+        echo "- {$crypto['name']} ({$crypto['symbol']})\n";
+        echo "  ID: {$crypto['_id']}\n";
+        echo "  CoinGecko: {$crypto['coinGecko']}\n";
+        echo "  Criado em: {$crypto['createdDate']}\n\n";
+    }
+    
 } catch (ApiException $e) {
     echo "Erro da API: " . $e->getMessage() . "\n";
 }
