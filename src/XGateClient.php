@@ -16,6 +16,7 @@ use XGate\Exception\AuthenticationException;
 use XGate\Exception\XGateException;
 use XGate\Http\HttpClient;
 use XGate\Resource\CustomerResource;
+use XGate\Resource\ExchangeRateResource;
 
 /**
  * Cliente principal do SDK da XGATE
@@ -99,6 +100,13 @@ class XGateClient
      * @var CustomerResource|null
      */
     private ?CustomerResource $customerResource = null;
+
+    /**
+     * Resource para operações de taxa de câmbio
+     *
+     * @var ExchangeRateResource|null
+     */
+    private ?ExchangeRateResource $exchangeRateResource = null;
 
     /**
      * Cria uma nova instância do XGateClient
@@ -497,6 +505,105 @@ class XGateClient
         }
 
         return $this->customerResource;
+    }
+
+    /**
+     * Obtém o resource para operações de taxa de câmbio
+     *
+     * @return ExchangeRateResource Resource de taxa de câmbio
+     *
+     * @example
+     * ```php
+     * $exchangeResource = $client->getExchangeRateResource();
+     * $rate = $exchangeResource->getExchangeRate('BRL', 'USDT');
+     * echo "1 USDT = " . $rate['rate'] . " BRL";
+     * ```
+     */
+    public function getExchangeRateResource(): ExchangeRateResource
+    {
+        $this->ensureInitialized();
+
+        if ($this->exchangeRateResource === null) {
+            $this->exchangeRateResource = new ExchangeRateResource($this->httpClient, $this->logger);
+        }
+
+        return $this->exchangeRateResource;
+    }
+
+    /**
+     * Obtém taxa de câmbio entre duas moedas
+     *
+     * Método de conveniência que delega para o ExchangeRateResource.
+     * Facilita o uso direto do cliente sem precisar obter o resource.
+     *
+     * @param string $fromCurrency Moeda de origem (ex: 'BRL', 'USD')
+     * @param string $toCurrency Moeda de destino (ex: 'USDT', 'BTC')
+     *
+     * @return array Dados da taxa de câmbio
+     *
+     * @throws ApiException Se a API retornar erro
+     * @throws NetworkException Se houver problema de conectividade
+     *
+     * @example
+     * ```php
+     * $rate = $client->getExchangeRate('BRL', 'USDT');
+     * echo "1 USDT = " . $rate['rate'] . " BRL";
+     * ```
+     */
+    public function getExchangeRate(string $fromCurrency, string $toCurrency): array
+    {
+        return $this->getExchangeRateResource()->getExchangeRate($fromCurrency, $toCurrency);
+    }
+
+    /**
+     * Converte um valor de uma moeda para outra
+     *
+     * Método de conveniência que obtém a taxa de câmbio e calcula
+     * o valor convertido em uma única operação.
+     *
+     * @param float $amount Valor a ser convertido
+     * @param string $fromCurrency Moeda de origem
+     * @param string $toCurrency Moeda de destino
+     *
+     * @return array Resultado da conversão com valor original, taxa e valor convertido
+     *
+     * @throws ApiException Se a API retornar erro
+     * @throws NetworkException Se houver problema de conectividade
+     *
+     * @example
+     * ```php
+     * $conversion = $client->convertAmount(100.0, 'BRL', 'USDT');
+     * echo "R$ 100,00 = " . $conversion['converted_amount'] . " USDT";
+     * ```
+     */
+    public function convertAmount(float $amount, string $fromCurrency, string $toCurrency): array
+    {
+        return $this->getExchangeRateResource()->convertAmount($amount, $fromCurrency, $toCurrency);
+    }
+
+    /**
+     * Obtém taxa de câmbio de criptomoeda com dados detalhados
+     *
+     * Método de conveniência para obter informações detalhadas sobre
+     * criptomoedas incluindo volume, market cap e variações.
+     *
+     * @param string $cryptoCurrency Criptomoeda (ex: 'USDT', 'BTC')
+     * @param string $fiatCurrency Moeda fiduciária (ex: 'BRL', 'USD')
+     *
+     * @return array Dados detalhados da criptomoeda
+     *
+     * @throws ApiException Se a API retornar erro
+     * @throws NetworkException Se houver problema de conectividade
+     *
+     * @example
+     * ```php
+     * $cryptoData = $client->getCryptoRate('USDT', 'BRL');
+     * echo "USDT: " . $cryptoData['rate'] . " BRL (Volume 24h: " . $cryptoData['volume_24h'] . ")";
+     * ```
+     */
+    public function getCryptoRate(string $cryptoCurrency, string $fiatCurrency): array
+    {
+        return $this->getExchangeRateResource()->getCryptoRate($cryptoCurrency, $fiatCurrency);
     }
 
     /**
