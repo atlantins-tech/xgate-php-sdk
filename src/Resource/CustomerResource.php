@@ -299,166 +299,21 @@ class CustomerResource
         }
     }
 
-    /**
-     * Delete customer from API
-     *
-     * @param string $customerId Customer unique identifier
-     * @return bool True if deletion was successful
-     * @throws ApiException If API returns error response
-     * @throws NetworkException If network request fails
-     *
-     * @example Deleting a customer
-     * ```php
-     * $success = $customerResource->delete('customer-123');
-     * if ($success) {
-     *     echo 'Customer deleted successfully';
-     * }
-     * ```
-     */
-    public function delete(string $customerId): bool
-    {
-        $this->logger->info('Deleting customer', ['customer_id' => $customerId]);
-
-        try {
-            $this->httpClient->request('DELETE', self::ENDPOINT . '/' . $customerId);
-
-            $this->logger->info('Customer deleted successfully', ['customer_id' => $customerId]);
-
-            return true;
-        } catch (ApiException | NetworkException $e) {
-            $this->logger->error('Failed to delete customer', [
-                'error' => $e->getMessage(),
-                'customer_id' => $customerId,
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
-     * List customers from API with optional filtering
-     *
-     * @param int $page Page number for pagination (default: 1)
-     * @param int $limit Number of customers per page (default: 20)
-     * @param array<string, mixed> $filters Optional filters for customer search
-     * @return array{customers: Customer[], pagination: array<string, mixed>} Customers list with pagination info
-     * @throws ApiException If API returns error response
-     * @throws NetworkException If network request fails
-     *
-     * @example Listing customers with pagination
-     * ```php
-     * $result = $customerResource->list(page: 1, limit: 10);
-     * foreach ($result['customers'] as $customer) {
-     *     echo $customer->name . "\n";
-     * }
-     * echo "Total: " . $result['pagination']['total'];
-     * ```
-     */
-    public function list(int $page = 1, int $limit = 20, array $filters = []): array
-    {
-        $this->logger->info('Listing customers', [
-            'page' => $page,
-            'limit' => $limit,
-            'filters' => $filters,
-        ]);
-
-        $queryParams = [
-            'page' => $page,
-            'limit' => $limit,
-        ];
-
-        if (!empty($filters)) {
-            $queryParams = array_merge($queryParams, $filters);
-        }
-
-        try {
-            $response = $this->httpClient->request('GET', self::ENDPOINT, [
-                'query' => $queryParams,
-            ]);
-
-            $responseData = json_decode($response->getBody()->getContents(), true);
-            
-            $customers = [];
-            if (isset($responseData['data']) && is_array($responseData['data'])) {
-                foreach ($responseData['data'] as $customerData) {
-                    $customers[] = Customer::fromArray($customerData);
-                }
-            }
-
-            $pagination = $responseData['pagination'] ?? [];
-
-            $this->logger->info('Customers listed successfully', [
-                'count' => count($customers),
-                'page' => $page,
-                'total' => $pagination['total'] ?? 0,
-            ]);
-
-            return [
-                'customers' => $customers,
-                'pagination' => $pagination,
-            ];
-        } catch (ApiException | NetworkException $e) {
-            $this->logger->error('Failed to list customers', [
-                'error' => $e->getMessage(),
-                'page' => $page,
-                'limit' => $limit,
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
-     * Search customers by email or name
-     *
-     * @param string $query Search query (email or name)
-     * @param int $limit Maximum number of results (default: 10)
-     * @return Customer[] Array of matching customers
-     * @throws ApiException If API returns error response
-     * @throws NetworkException If network request fails
-     *
-     * @example Searching customers
-     * ```php
-     * $customers = $customerResource->search('joao@example.com');
-     * foreach ($customers as $customer) {
-     *     echo $customer->getDisplayName() . "\n";
-     * }
-     * ```
-     */
-    public function search(string $query, int $limit = 10): array
-    {
-        $this->logger->info('Searching customers', [
-            'query' => $query,
-            'limit' => $limit,
-        ]);
-
-        try {
-            $response = $this->httpClient->request('GET', self::ENDPOINT . '/search', [
-                'query' => [
-                    'q' => $query,
-                    'limit' => $limit,
-                ],
-            ]);
-
-            $responseData = json_decode($response->getBody()->getContents(), true);
-            
-            $customers = [];
-            if (isset($responseData['data']) && is_array($responseData['data'])) {
-                foreach ($responseData['data'] as $customerData) {
-                    $customers[] = Customer::fromArray($customerData);
-                }
-            }
-
-            $this->logger->info('Customer search completed', [
-                'query' => $query,
-                'results_count' => count($customers),
-            ]);
-
-            return $customers;
-        } catch (ApiException | NetworkException $e) {
-            $this->logger->error('Failed to search customers', [
-                'error' => $e->getMessage(),
-                'query' => $query,
-            ]);
-            throw $e;
-        }
-    }
+    // ===================================================================
+    // MÉTODOS REMOVIDOS - NÃO DOCUMENTADOS OFICIALMENTE
+    // ===================================================================
+    // 
+    // Os métodos delete(), list() e search() foram removidos porque:
+    // 1. Não estão documentados na documentação oficial da XGATE
+    // 2. Apresentam problemas de autenticação inconsistentes
+    // 3. Mantemos apenas funcionalidades oficialmente suportadas
+    //
+    // Documentação oficial disponível:
+    // - Criar: https://api.xgateglobal.com/pages/customer/create.html
+    // - Atualizar: https://api.xgateglobal.com/pages/customer/update.html
+    // - Buscar por ID: Funciona via endpoint GET /customer/{id}
+    //
+    // Se precisar dessas funcionalidades, verifique a documentação oficial
+    // da XGATE para confirmar se foram adicionadas e como implementá-las.
+    // ===================================================================
 } 
