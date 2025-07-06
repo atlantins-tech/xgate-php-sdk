@@ -228,9 +228,19 @@ class CustomerResource
 
     /**
      * Update customer information via API
+     * 
+     * Official API Documentation: https://api.xgateglobal.com/pages/customer/update.html
+     * 
+     * Endpoint: PUT /customer/{CLIENT_ID}
+     * 
+     * Supported fields for update:
+     * - name: string (optional) - Customer name
+     * - document: string (optional) - Customer document number
+     * - email: string (optional) - Customer email address  
+     * - phone: string (optional) - Customer phone number
      *
      * @param string $customerId Customer unique identifier
-     * @param array<string, mixed> $updateData Fields to update
+     * @param array<string, mixed> $updateData Fields to update (name, document, email, phone)
      * @return Customer Updated customer DTO
      * @throws ApiException If API returns error response
      * @throws NetworkException If network request fails
