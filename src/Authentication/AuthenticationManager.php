@@ -62,7 +62,7 @@ class AuthenticationManager implements AuthenticationManagerInterface
     /**
      * Authenticate user with email and password
      *
-     * Sends POST request to /login endpoint with credentials
+     * Sends POST request to /auth/token endpoint with credentials
      * and stores the received access token for subsequent requests.
      *
      * @param string $email User email address for authentication
@@ -81,21 +81,23 @@ class AuthenticationManager implements AuthenticationManagerInterface
     public function login(string $email, string $password): bool
     {
         try {
-            $response = $this->httpClient->post('/login', [
-                'email' => $email,
-                'password' => $password,
+            $response = $this->httpClient->post('/auth/token', [
+                'json' => [
+                    'email' => $email,
+                    'password' => $password,
+                ]
             ]);
 
             $data = json_decode($response->getBody()->getContents(), true);
 
-            if (!isset($data['access_token'])) {
+            if (!isset($data['token'])) {
                 throw AuthenticationException::loginFailed(
                     $response->getStatusCode(),
                     'Token de acesso não encontrado na resposta'
                 );
             }
 
-            $token = $data['access_token'];
+            $token = $data['token'];
 
             // Store token in cache
             $this->storeToken($token);

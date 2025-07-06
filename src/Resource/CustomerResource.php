@@ -55,7 +55,11 @@ class CustomerResource
      *
      * @var string
      */
-    private const ENDPOINT = '/customers';
+    /**
+     * API endpoint para operações de clientes
+     * @see https://api.xgateglobal.com/pages/customer/create.html
+     */
+    private const ENDPOINT = '/customer';
 
     /**
      * Create new CustomerResource instance
@@ -76,20 +80,19 @@ class CustomerResource
      * @param string $email Customer email address
      * @param string|null $phone Customer phone number
      * @param string|null $document Customer document number
-     * @param string|null $documentType Customer document type (cpf, cnpj)
      * @param array<string, mixed> $metadata Additional customer metadata
      * @return Customer Created customer DTO
      * @throws ApiException If API returns error response
      * @throws NetworkException If network request fails
      *
+     * @see https://api.xgateglobal.com/pages/customer/create.html
      * @example Creating a new customer
      * ```php
      * $customer = $customerResource->create(
      *     name: 'João Silva',
      *     email: 'joao@example.com',
      *     phone: '+5511999999999',
-     *     document: '12345678901',
-     *     documentType: 'cpf'
+     *     document: '12345678901'
      * );
      * ```
      */
@@ -98,7 +101,6 @@ class CustomerResource
         string $email,
         ?string $phone = null,
         ?string $document = null,
-        ?string $documentType = null,
         array $metadata = []
     ): Customer {
         $this->logger->info('Creating new customer', [
@@ -121,10 +123,6 @@ class CustomerResource
             $requestData['document'] = $document;
         }
 
-        if ($documentType !== null) {
-            $requestData['document_type'] = $documentType;
-        }
-
         if (!empty($metadata)) {
             $requestData['metadata'] = $metadata;
         }
@@ -135,7 +133,30 @@ class CustomerResource
             ]);
 
             $responseData = json_decode($response->getBody()->getContents(), true);
-            $customer = Customer::fromArray($responseData);
+            
+            // A API retorna o cliente dentro da chave 'customer'
+            $customerData = $responseData['customer'] ?? $responseData;
+            
+            // Mapear _id para id se necessário
+            if (isset($customerData['_id']) && !isset($customerData['id'])) {
+                $customerData['id'] = $customerData['_id'];
+            }
+            
+            // Adicionar os dados originais se não estiverem na resposta
+            if (!isset($customerData['name'])) {
+                $customerData['name'] = $requestData['name'];
+            }
+            if (!isset($customerData['email'])) {
+                $customerData['email'] = $requestData['email'];
+            }
+            if (!isset($customerData['phone']) && isset($requestData['phone'])) {
+                $customerData['phone'] = $requestData['phone'];
+            }
+            if (!isset($customerData['document']) && isset($requestData['document'])) {
+                $customerData['document'] = $requestData['document'];
+            }
+            
+            $customer = Customer::fromArray($customerData);
 
             $this->logger->info('Customer created successfully', [
                 'customer_id' => $customer->id,
@@ -174,6 +195,20 @@ class CustomerResource
             $response = $this->httpClient->request('GET', self::ENDPOINT . '/' . $customerId);
 
             $responseData = json_decode($response->getBody()->getContents(), true);
+            
+            // Mapear _id para id se necessário
+            if (isset($responseData['_id']) && !isset($responseData['id'])) {
+                $responseData['id'] = $responseData['_id'];
+            }
+            
+            // Mapear createdDate/updatedDate para createdAt/updatedAt
+            if (isset($responseData['createdDate']) && !isset($responseData['createdAt'])) {
+                $responseData['createdAt'] = $responseData['createdDate'];
+            }
+            if (isset($responseData['updatedDate']) && !isset($responseData['updatedAt'])) {
+                $responseData['updatedAt'] = $responseData['updatedDate'];
+            }
+            
             $customer = Customer::fromArray($responseData);
 
             $this->logger->info('Customer retrieved successfully', [

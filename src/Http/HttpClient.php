@@ -486,6 +486,39 @@ class HttpClient
     }
 
     /**
+     * Adiciona um header padrão para todas as requisições
+     *
+     * @param string $name Nome do header
+     * @param string $value Valor do header
+     * @return void
+     */
+    public function setDefaultHeader(string $name, string $value): void
+    {
+        $this->defaultHeaders[$name] = $value;
+    }
+
+    /**
+     * Remove um header padrão
+     *
+     * @param string $name Nome do header
+     * @return void
+     */
+    public function removeDefaultHeader(string $name): void
+    {
+        unset($this->defaultHeaders[$name]);
+    }
+
+    /**
+     * Obtém todos os headers padrão
+     *
+     * @return array<string, string>
+     */
+    public function getDefaultHeaders(): array
+    {
+        return $this->defaultHeaders;
+    }
+
+    /**
      * Executa requisição com tratamento de exceções e retry
      *
      * @param string $method Método HTTP
@@ -500,6 +533,12 @@ class HttpClient
      */
     private function executeRequest(string $method, string $uri, array $options = []): ResponseInterface
     {
+        // Mescla headers padrão com headers específicos da requisição
+        $options['headers'] = array_merge(
+            $this->defaultHeaders,
+            $options['headers'] ?? []
+        );
+
         $attempts = 0;
         $maxAttempts = $this->config->getRetryAttempts() + 1; // +1 para incluir a tentativa inicial
 

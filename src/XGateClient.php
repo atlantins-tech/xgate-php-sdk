@@ -15,6 +15,7 @@ use XGate\Exception\ApiException;
 use XGate\Exception\AuthenticationException;
 use XGate\Exception\XGateException;
 use XGate\Http\HttpClient;
+use XGate\Resource\CustomerResource;
 
 /**
  * Cliente principal do SDK da XGATE
@@ -93,6 +94,13 @@ class XGateClient
     private bool $initialized = false;
 
     /**
+     * Resource para operações de clientes
+     *
+     * @var CustomerResource|null
+     */
+    private ?CustomerResource $customerResource = null;
+
+    /**
      * Cria uma nova instância do XGateClient
      *
      * @param array<string, mixed>|ConfigurationManager $config Configuração do SDK ou array de configurações
@@ -163,6 +171,12 @@ class XGateClient
             $success = $this->authManager->login($email, $password);
 
             if ($success) {
+                // Configura o header de autenticação no HttpClient
+                $token = $this->authManager->getToken();
+                if ($token) {
+                    $this->httpClient->setDefaultHeader('Authorization', 'Bearer ' . $token);
+                }
+
                 $this->logger->info('User authenticated successfully', [
                     'email' => $email,
                 ]);
@@ -221,6 +235,9 @@ class XGateClient
         $success = $this->authManager->logout();
 
         if ($success) {
+            // Remove o header de autenticação do HttpClient
+            $this->httpClient->removeDefaultHeader('Authorization');
+            
             $this->logger->info('User logged out successfully');
         }
 
@@ -458,6 +475,28 @@ class XGateClient
     public function isInitialized(): bool
     {
         return $this->initialized;
+    }
+
+    /**
+     * Obtém o resource para operações de clientes
+     *
+     * @return CustomerResource Resource de clientes
+     *
+     * @example
+     * ```php
+     * $customerResource = $client->getCustomerResource();
+     * $customer = $customerResource->create('João Silva', 'joao@example.com');
+     * ```
+     */
+    public function getCustomerResource(): CustomerResource
+    {
+        $this->ensureInitialized();
+
+        if ($this->customerResource === null) {
+            $this->customerResource = new CustomerResource($this->httpClient, $this->logger);
+        }
+
+        return $this->customerResource;
     }
 
     /**

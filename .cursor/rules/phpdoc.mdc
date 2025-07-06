@@ -3,3 +3,276 @@ description:
 globs:
 alwaysApply: false
 ---
+# PHPDoc Standards para XGATE PHP SDK
+
+Esta regra garante documentação consistente e suporte completo a autocompletar em IDEs modernas.
+
+## **Docblocks de Classe Obrigatórios**
+
+### ✅ DO: Estrutura completa de docblock de classe
+```php
+/**
+ * Gerencia a autenticação com a API XGATE
+ * 
+ * Esta classe é responsável por fazer login, armazenar tokens
+ * e incluir headers de autorização nas requisições.
+ * 
+ * @package XGate\Authentication
+ * @author XGATE Team
+ * @since 1.0.0
+ */
+class AuthenticationManager
+{
+    // implementação
+}
+```
+
+### ❌ DON'T: Classe sem documentação
+```php
+class AuthenticationManager
+{
+    // implementação
+}
+```
+
+## **Docblocks de Método Obrigatórios**
+
+### ✅ DO: Documentação completa de métodos
+```php
+/**
+ * Faz login na API XGATE
+ * 
+ * Envia requisição POST para /login com credenciais do usuário
+ * e armazena o token de acesso retornado para uso posterior.
+ * 
+ * @param string $email Email do usuário para autenticação
+ * @param string $password Senha do usuário
+ * @return bool True se login foi bem sucedido, false caso contrário
+ * @throws AuthenticationException Se credenciais são inválidas
+ * @throws NetworkException Se há problemas de conectividade
+ * @example
+ * ```php
+ * $auth = new AuthenticationManager();
+ * if ($auth->login('user@example.com', 'password123')) {
+ *     echo 'Login realizado com sucesso!';
+ * }
+ * ```
+ */
+public function login(string $email, string $password): bool
+{
+    // implementação
+}
+```
+
+### ❌ DON'T: Método sem documentação ou documentação incompleta
+```php
+// Ruim: sem documentação
+public function login(string $email, string $password): bool
+
+// Ruim: documentação incompleta
+/**
+ * Login method
+ */
+public function login(string $email, string $password): bool
+```
+
+## **Docblocks de Propriedade Obrigatórios**
+
+### ✅ DO: Propriedades com tipos e descrições
+```php
+/**
+ * Token de acesso atual da API
+ * 
+ * @var string|null Null quando não autenticado
+ */
+private ?string $accessToken = null;
+
+/**
+ * Configurações do cliente HTTP
+ * 
+ * @var array{timeout: int, headers: array<string, string>}
+ */
+private array $httpConfig;
+
+/**
+ * Lista de clientes cadastrados
+ * 
+ * @var Customer[] Array de objetos Customer
+ */
+private array $customers = [];
+```
+
+### ❌ DON'T: Propriedades sem documentação
+```php
+private ?string $accessToken = null;
+private array $httpConfig;
+private array $customers = [];
+```
+
+## **Tipos Específicos e Estruturas Complexas**
+
+### ✅ DO: Documentar arrays complexos e objetos
+```php
+/**
+ * Processa dados de transação
+ * 
+ * @param array{
+ *     id: string,
+ *     amount: float,
+ *     currency: string,
+ *     metadata: array<string, mixed>
+ * } $transactionData Dados da transação
+ * @return TransactionResult
+ */
+public function processTransaction(array $transactionData): TransactionResult
+
+/**
+ * Retorna lista de moedas disponíveis
+ * 
+ * @return array<string, array{name: string, symbol: string, decimals: int}>
+ */
+public function getAvailableCurrencies(): array
+```
+
+### ❌ DON'T: Usar tipos genéricos sem especificação
+```php
+/**
+ * @param array $data
+ * @return array
+ */
+public function processTransaction(array $data): array
+```
+
+## **Anotações @throws Obrigatórias**
+
+### ✅ DO: Documentar todas as exceções possíveis
+```php
+/**
+ * Cria novo cliente na API
+ * 
+ * @param array $customerData Dados do cliente
+ * @return Customer
+ * @throws ValidationException Se dados são inválidos
+ * @throws AuthenticationException Se não autenticado
+ * @throws ApiException Se API retorna erro
+ * @throws NetworkException Se há problemas de rede
+ */
+public function createCustomer(array $customerData): Customer
+```
+
+### ❌ DON'T: Omitir exceções que o método pode lançar
+```php
+/**
+ * Cria novo cliente na API
+ * 
+ * @param array $customerData Dados do cliente
+ * @return Customer
+ */
+public function createCustomer(array $customerData): Customer
+```
+
+## **Exemplos de Uso (@example)**
+
+### ✅ DO: Incluir exemplos práticos quando útil
+```php
+/**
+ * Converte valor entre moedas
+ * 
+ * @param float $amount Valor a ser convertido
+ * @param string $fromCurrency Moeda de origem (ex: 'BRL')
+ * @param string $toCurrency Moeda de destino (ex: 'USD')
+ * @return float Valor convertido
+ * @example
+ * ```php
+ * $converter = new CurrencyConverter();
+ * $usdAmount = $converter->convert(100.0, 'BRL', 'USD');
+ * echo "R$ 100,00 = $ {$usdAmount}";
+ * ```
+ */
+public function convert(float $amount, string $fromCurrency, string $toCurrency): float
+```
+
+## **Interfaces e Abstrações**
+
+### ✅ DO: Documentar contratos e comportamentos esperados
+```php
+/**
+ * Interface para gerenciamento de autenticação
+ * 
+ * Define o contrato para classes que implementam
+ * autenticação com APIs externas.
+ * 
+ * @package XGate\Contracts
+ */
+interface AuthenticationManagerInterface
+{
+    /**
+     * Autentica usuário com credenciais
+     * 
+     * @param string $email Email do usuário
+     * @param string $password Senha do usuário
+     * @return bool True se autenticação bem sucedida
+     * @throws AuthenticationException Se credenciais inválidas
+     */
+    public function login(string $email, string $password): bool;
+}
+```
+
+## **Validação e Ferramentas**
+
+### Ferramentas Obrigatórias:
+- **PHPStan**: Validação de tipos e docblocks
+- **PHP CS Fixer**: Formatação consistente de docblocks
+- **phpDocumentor**: Geração de documentação
+
+### Configurações Requeridas:
+```json
+// .php-cs-fixer.php
+'phpdoc_align' => true,
+'phpdoc_order' => true,
+'phpdoc_separation' => true,
+'phpdoc_summary' => true,
+'phpdoc_trim' => true,
+'phpdoc_types' => true,
+```
+
+### Pre-commit Hook:
+```bash
+# Validar PHPDoc antes de commit
+phpstan analyse --level=8 src/
+php-cs-fixer fix --dry-run --diff
+```
+
+## **Padrões Específicos do Projeto**
+
+### Namespace Padrão:
+- `@package XGate\<SubNamespace>`
+
+### Author Padrão:
+- `@author XGATE Team`
+
+### Since Padrão:
+- `@since 1.0.0` (para novas classes)
+
+### Links Úteis:
+- [PSR-5 PHPDoc Standard](https://github.com/php-fig/fig-standards/blob/master/proposed/phpdoc.md)
+- [PHPStan PHPDoc Reference](https://phpstan.org/writing-php-code/phpdocs-basics)
+- [PHP CS Fixer PHPDoc Rules](https://cs.symfony.com/doc/rules/phpdoc/index.html)
+
+## **Exemplos de Violações Comuns**
+
+### ❌ Evitar:
+- Docblocks vazios ou apenas com `/**  */`
+- Usar `@param mixed` sem explicação específica
+- Omitir `@throws` para exceções conhecidas
+- Usar tipos genéricos como `array` sem especificação
+- Documentação em português misturada com inglês
+- Exemplos que não funcionam ou estão desatualizados
+
+### ✅ Sempre fazer:
+- Documentar TODOS os métodos públicos e protegidos
+- Especificar tipos exatos, incluindo union types quando apropriado
+- Incluir descrições úteis, não apenas repetir o nome do método
+- Manter exemplos atualizados e funcionais
+- Usar português consistente para descrições (inglês apenas para tags técnicas)
+- Validar documentação com ferramentas automatizadas
