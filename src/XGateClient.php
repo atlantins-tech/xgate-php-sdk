@@ -17,6 +17,7 @@ use XGate\Exception\XGateException;
 use XGate\Http\HttpClient;
 use XGate\Resource\CustomerResource;
 use XGate\Resource\ExchangeRateResource;
+use XGate\Resource\CryptoPaymentResource;
 
 /**
  * Cliente principal do SDK da XGATE
@@ -107,6 +108,13 @@ class XGateClient
      * @var ExchangeRateResource|null
      */
     private ?ExchangeRateResource $exchangeRateResource = null;
+
+    /**
+     * Resource para operações de pagamentos em criptomoedas
+     *
+     * @var CryptoPaymentResource|null
+     */
+    private ?CryptoPaymentResource $cryptoPaymentResource = null;
 
     /**
      * Cria uma nova instância do XGateClient
@@ -604,6 +612,100 @@ class XGateClient
     public function getCryptoRate(string $cryptoCurrency, string $fiatCurrency): array
     {
         return $this->getExchangeRateResource()->getCryptoRate($cryptoCurrency, $fiatCurrency);
+    }
+
+    /**
+     * Obtém o resource de pagamentos em criptomoedas
+     *
+     * Fornece acesso aos métodos de pagamento em criptomoedas como USDT.
+     * O resource é criado sob demanda e reutilizado em chamadas subsequentes.
+     *
+     * @return CryptoPaymentResource Resource de pagamentos em criptomoedas
+     *
+     * @example
+     * ```php
+     * $cryptoResource = $client->getCryptoPaymentResource();
+     * $payment = $cryptoResource->createPayment([
+     *     'amount' => 100.0,
+     *     'currency' => 'BRL',
+     *     'crypto_currency' => 'USDT',
+     *     'client_id' => 'client_123'
+     * ]);
+     * ```
+     */
+    public function getCryptoPaymentResource(): CryptoPaymentResource
+    {
+        $this->ensureInitialized();
+
+        if ($this->cryptoPaymentResource === null) {
+            $this->cryptoPaymentResource = new CryptoPaymentResource($this->httpClient, $this->logger);
+        }
+
+        return $this->cryptoPaymentResource;
+    }
+
+    /**
+     * Cria um pagamento em criptomoeda
+     *
+     * Método de conveniência que delega para o CryptoPaymentResource.
+     * Facilita a criação de pagamentos USDT diretamente do cliente.
+     *
+     * @param array $paymentData Dados do pagamento incluindo valor, moeda e detalhes
+     *
+     * @return array Dados do pagamento criado com endereço da carteira e QR code
+     *
+     * @throws ApiException Se a API retornar erro
+     * @throws NetworkException Se houver problema de conectividade
+     *
+     * @example
+     * ```php
+     * $payment = $client->createPayment([
+     *     'amount' => 250.00,
+     *     'currency' => 'BRL',
+     *     'crypto_currency' => 'USDT',
+     *     'network' => 'TRC20',
+     *     'client_id' => 'client_456',
+     *     'order_id' => 'order_789',
+     *     'description' => 'Pagamento por serviços'
+     * ]);
+     * 
+     * echo "Endereço da carteira: " . $payment['wallet_address'];
+     * echo "QR Code: " . $payment['qr_code'];
+     * ```
+     */
+    public function createPayment(array $paymentData): array
+    {
+        return $this->getCryptoPaymentResource()->createPayment($paymentData);
+    }
+
+    /**
+     * Obtém o status de um pagamento em criptomoeda
+     *
+     * Método de conveniência que verifica o status atual de um pagamento.
+     * Útil para confirmar se um pagamento USDT foi processado.
+     *
+     * @param string $paymentId ID único do pagamento
+     *
+     * @return array Status do pagamento com detalhes da transação
+     *
+     * @throws ApiException Se a API retornar erro ou pagamento não encontrado
+     * @throws NetworkException Se houver problema de conectividade
+     *
+     * @example
+     * ```php
+     * $status = $client->getPaymentStatus('pay_abc123');
+     * 
+     * if ($status['status'] === 'completed') {
+     *     echo "Pagamento confirmado!";
+     *     echo "Hash da transação: " . $status['transaction_hash'];
+     * } else {
+     *     echo "Pagamento ainda pendente...";
+     * }
+     * ```
+     */
+    public function getPaymentStatus(string $paymentId): array
+    {
+        return $this->getCryptoPaymentResource()->getPaymentStatus($paymentId);
     }
 
     /**
