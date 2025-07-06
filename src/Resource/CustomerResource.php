@@ -256,14 +256,30 @@ class CustomerResource
             ]);
 
             $responseData = json_decode($response->getBody()->getContents(), true);
-            $customer = Customer::fromArray($responseData);
-
-            $this->logger->info('Customer updated successfully', [
-                'customer_id' => $customer->id,
-                'customer_email' => $customer->email,
-            ]);
-
-            return $customer;
+            
+            // A API de atualização não retorna os dados do cliente, apenas uma mensagem de sucesso
+            // Precisamos buscar o cliente atualizado separadamente
+            if (isset($responseData['message']) && strpos($responseData['message'], 'sucesso') !== false) {
+                // Buscar o cliente atualizado
+                $customer = $this->get($customerId);
+                
+                $this->logger->info('Customer updated successfully', [
+                    'customer_id' => $customer->id,
+                    'customer_email' => $customer->email,
+                ]);
+                
+                return $customer;
+            } else {
+                // Fallback: tentar processar a resposta diretamente (caso a API mude no futuro)
+                $customer = Customer::fromArray($responseData);
+                
+                $this->logger->info('Customer updated successfully', [
+                    'customer_id' => $customer->id,
+                    'customer_email' => $customer->email,
+                ]);
+                
+                return $customer;
+            }
         } catch (ApiException | NetworkException $e) {
             $this->logger->error('Failed to update customer', [
                 'error' => $e->getMessage(),
