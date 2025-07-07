@@ -16,6 +16,7 @@ use XGate\Exception\AuthenticationException;
 use XGate\Exception\XGateException;
 use XGate\Http\HttpClient;
 use XGate\Resource\CustomerResource;
+use XGate\Resource\DepositResource;
 use XGate\Resource\ExchangeRateResource;
 use XGate\Resource\CryptoPaymentResource;
 
@@ -101,6 +102,13 @@ class XGateClient
      * @var CustomerResource|null
      */
     private ?CustomerResource $customerResource = null;
+
+    /**
+     * Resource para operações de depósito
+     *
+     * @var DepositResource|null
+     */
+    private ?DepositResource $depositResource = null;
 
     /**
      * Resource para operações de taxa de câmbio
@@ -510,6 +518,39 @@ class XGateClient
         }
 
         return $this->customerResource;
+    }
+
+    /**
+     * Obtém o resource para operações de depósito
+     *
+     * Fornece acesso aos métodos de criação e gerenciamento de depósitos.
+     * O resource é criado sob demanda e reutilizado em chamadas subsequentes.
+     *
+     * @return DepositResource Resource de depósitos
+     *
+     * @example
+     * ```php
+     * $depositResource = $client->getDepositResource();
+     * $transaction = new Transaction(
+     *     id: null,
+     *     amount: '250.00',
+     *     currency: 'BRL',
+     *     accountId: 'acc_123',
+     *     paymentMethod: 'crypto_transfer',
+     *     type: 'deposit'
+     * );
+     * $deposit = $depositResource->createDeposit($transaction);
+     * ```
+     */
+    public function getDepositResource(): DepositResource
+    {
+        $this->ensureInitialized();
+
+        if ($this->depositResource === null) {
+            $this->depositResource = new DepositResource($this->httpClient, $this->logger);
+        }
+
+        return $this->depositResource;
     }
 
     /**
