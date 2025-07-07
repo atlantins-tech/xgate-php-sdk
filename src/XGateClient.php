@@ -187,12 +187,6 @@ class XGateClient
             $success = $this->authManager->login($email, $password);
 
             if ($success) {
-                // Configura o header de autenticação no HttpClient
-                $token = $this->authManager->getToken();
-                if ($token) {
-                    $this->httpClient->setDefaultHeader('Authorization', 'Bearer ' . $token);
-                }
-
                 $this->logger->info('User authenticated successfully', [
                     'email' => $email,
                 ]);
@@ -251,9 +245,6 @@ class XGateClient
         $success = $this->authManager->logout();
 
         if ($success) {
-            // Remove o header de autenticação do HttpClient
-            $this->httpClient->removeDefaultHeader('Authorization');
-            
             $this->logger->info('User logged out successfully');
         }
 
