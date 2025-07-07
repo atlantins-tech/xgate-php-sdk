@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace XGate\Resource;
 
 use Psr\Log\LoggerInterface;
-use XGate\Http\HttpClient;
+use XGate\XGateClient;
 use XGate\Model\Transaction;
 use XGate\Exception\ApiException;
 use XGate\Exception\NetworkException;
@@ -22,7 +22,7 @@ use XGate\Exception\NetworkException;
  *
  * @example Basic deposit creation
  * ```php
- * $depositResource = new DepositResource($httpClient, $logger);
+ * $depositResource = new DepositResource($xgateClient, $logger);
  *
  * // Create a new deposit transaction
  * $transaction = new Transaction(
@@ -45,7 +45,7 @@ class DepositResource
     private const ENDPOINT_CURRENCIES = '/deposits/currencies';
 
     public function __construct(
-        private readonly HttpClient $httpClient,
+        private readonly XGateClient $xgateClient,
         private readonly LoggerInterface $logger
     ) {}
 
@@ -75,7 +75,7 @@ class DepositResource
         $this->logger->info('Listing supported currencies for deposits');
 
         try {
-            $response = $this->httpClient->get(self::ENDPOINT_CURRENCIES);
+            $response = $this->xgateClient->get(self::ENDPOINT_CURRENCIES);
             $data = json_decode($response->getBody()->getContents(), true);
 
             $this->logger->info('Successfully retrieved supported currencies', [
@@ -143,7 +143,7 @@ class DepositResource
 
         try {
             $requestData = $transaction->toArray();
-            $response = $this->httpClient->post(self::ENDPOINT_DEPOSITS, ['json' => $requestData]);
+            $response = $this->xgateClient->post(self::ENDPOINT_DEPOSITS, ['json' => $requestData]);
             $responseData = json_decode($response->getBody()->getContents(), true);
 
             $createdTransaction = Transaction::fromArray($responseData);
@@ -213,7 +213,7 @@ class DepositResource
 
         try {
             $endpoint = self::ENDPOINT_DEPOSITS . '/' . urlencode($depositId);
-            $response = $this->httpClient->get($endpoint);
+            $response = $this->xgateClient->get($endpoint);
             $responseData = json_decode($response->getBody()->getContents(), true);
 
             $transaction = Transaction::fromArray($responseData);
@@ -318,7 +318,7 @@ class DepositResource
             }
 
             $endpoint = self::ENDPOINT_DEPOSITS . '?' . http_build_query($queryParams);
-            $response = $this->httpClient->get($endpoint);
+            $response = $this->xgateClient->get($endpoint);
             $responseData = json_decode($response->getBody()->getContents(), true);
 
             // Convert transaction data to Transaction DTOs
@@ -404,7 +404,7 @@ class DepositResource
             ];
 
             $endpoint = self::ENDPOINT_DEPOSITS . '/search?' . http_build_query($queryParams);
-            $response = $this->httpClient->get($endpoint);
+            $response = $this->xgateClient->get($endpoint);
             $responseData = json_decode($response->getBody()->getContents(), true);
 
             $transactions = [];
