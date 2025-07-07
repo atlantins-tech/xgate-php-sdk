@@ -534,7 +534,8 @@ class HttpClient
     private function executeRequest(string $method, string $uri, array $options = []): ResponseInterface
     {
         // Mescla headers padrão com headers específicos da requisição
-        $options['headers'] = array_merge(
+        // Usa array_replace para evitar duplicação - headers específicos sobrescrevem os padrão
+        $options['headers'] = array_replace(
             $this->defaultHeaders,
             $options['headers'] ?? []
         );
