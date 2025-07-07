@@ -187,6 +187,9 @@ class XGateClient
             $success = $this->authManager->login($email, $password);
 
             if ($success) {
+                // Configurar o HttpClient com o header de autorização
+                $this->configureAuthenticationHeaders();
+                
                 $this->logger->info('User authenticated successfully', [
                     'email' => $email,
                 ]);
@@ -245,6 +248,9 @@ class XGateClient
         $success = $this->authManager->logout();
 
         if ($success) {
+            // Remover o header de autorização do HttpClient
+            $this->removeAuthenticationHeaders();
+            
             $this->logger->info('User logged out successfully');
         }
 
@@ -793,13 +799,9 @@ class XGateClient
     private function makeRequest(string $method, string $uri, array $options): array
     {
         try {
-            // Adiciona headers de autenticação se o usuário estiver autenticado
-            if ($this->isAuthenticated()) {
-                $authHeaders = $this->authManager->getAuthorizationHeader();
-                // Usa array_replace para evitar duplicação de headers
-                $options['headers'] = array_replace($options['headers'] ?? [], $authHeaders);
-            }
-
+            // O header de autenticação é configurado automaticamente no HttpClient
+            // após o login, então não precisamos adicioná-lo manualmente aqui
+            
             $response = $this->httpClient->request($method, $uri, $options);
             $body = $response->getBody()->getContents();
 
@@ -828,5 +830,38 @@ class XGateClient
         if (!$this->initialized) {
             throw new ApiException('XGateClient não foi inicializado corretamente');
         }
+    }
+
+    /**
+     * Configura o HttpClient com o header de autorização após autenticação
+     *
+     * @throws AuthenticationException Se não há token disponível
+     */
+    private function configureAuthenticationHeaders(): void
+    {
+        try {
+            $authHeader = $this->authManager->getAuthorizationHeader();
+            
+            // Configurar o header padrão no HttpClient
+            $this->httpClient->setDefaultHeader('Authorization', $authHeader['Authorization']);
+            
+            $this->logger->debug('Authentication headers configured for HttpClient');
+        } catch (AuthenticationException $e) {
+            $this->logger->error('Failed to configure authentication headers', [
+                'error' => $e->getMessage(),
+            ]);
+            
+            throw $e;
+        }
+    }
+
+    /**
+     * Remove o header de autorização do HttpClient após logout
+     */
+    private function removeAuthenticationHeaders(): void
+    {
+        $this->httpClient->removeDefaultHeader('Authorization');
+        
+        $this->logger->debug('Authentication headers removed from HttpClient');
     }
 }

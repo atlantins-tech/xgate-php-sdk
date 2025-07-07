@@ -34,6 +34,8 @@ class ExchangeRateResource
 {
     private const ENDPOINT_EXCHANGE_RATES = '/exchange-rates';
     private const ENDPOINT_CRYPTO_RATES = '/crypto/rates';
+    private const ENDPOINT_DEPOSIT_CONVERSION = '/deposit/conversion/tether';
+    private const ENDPOINT_COMPANY_CURRENCIES = '/deposit/company/currencies';
 
     public function __construct(
         private readonly \XGate\XGateClient $xgateClient,
@@ -316,14 +318,14 @@ class ExchangeRateResource
     /**
      * Convert amount from one currency to another
      *
-     * Convenience method that gets the exchange rate and calculates
-     * the converted amount in a single operation.
+     * Uses the official XGate API endpoint for USDT conversion.
+     * This method follows the official documentation and requires company currencies.
      *
      * @param float $amount Amount to convert
      * @param string $fromCurrency Source currency code
      * @param string $toCurrency Target currency code
      *
-     * @return array Conversion result with original amount, rate, and converted amount
+     * @return array Conversion result with converted amount and crypto currency
      *
      * @throws ApiException If the API returns an error response
      * @throws NetworkException If there's a network connectivity issue
@@ -332,47 +334,68 @@ class ExchangeRateResource
      * ```php
      * $conversion = $exchangeResource->convertAmount(100.0, 'BRL', 'USDT');
      * // Returns: [
-     * //     'original_amount' => 100.0,
-     * //     'from_currency' => 'BRL',
-     * //     'to_currency' => 'USDT',
-     * //     'rate' => 5.45,
-     * //     'converted_amount' => 18.35,
-     * //     'timestamp' => '2025-01-06T10:30:00Z'
+     * //     'amount' => 18.35,
+     * //     'crypto' => 'USDT'
      * // ]
      * ```
      */
     public function convertAmount(float $amount, string $fromCurrency, string $toCurrency): array
     {
-        $this->logger->info('Converting amount', [
+        $this->logger->info('Converting amount using official API', [
             'amount' => $amount,
             'from_currency' => $fromCurrency,
             'to_currency' => $toCurrency
         ]);
 
-        $rateData = $this->getExchangeRate($fromCurrency, $toCurrency);
-        $rate = $rateData['rate'] ?? 0;
-        
-        if ($rate <= 0) {
-            throw new ApiException('Invalid exchange rate received: ' . $rate);
+        try {
+            // Primeiro, obter as moedas da empresa
+            $currencies = $this->xgateClient->get(self::ENDPOINT_COMPANY_CURRENCIES);
+            
+            // Encontrar a moeda correspondente
+            $currency = null;
+            foreach ($currencies as $curr) {
+                if (strtoupper($curr['name']) === strtoupper($fromCurrency)) {
+                    $currency = $curr;
+                    break;
+                }
+            }
+            
+            if (!$currency) {
+                throw new ApiException("Currency '{$fromCurrency}' not found in company currencies");
+            }
+
+            // Fazer a conversão usando o endpoint oficial
+            $conversionData = [
+                'amount' => $amount,
+                'currency' => $currency
+            ];
+
+            $result = $this->xgateClient->post(self::ENDPOINT_DEPOSIT_CONVERSION, $conversionData);
+
+            $this->logger->info('Successfully converted amount using official API', [
+                'original_amount' => $amount,
+                'converted_amount' => $result['amount'] ?? 0,
+                'crypto' => $result['crypto'] ?? 'USDT'
+            ]);
+
+            return $result;
+        } catch (ApiException $e) {
+            $this->logger->error('API error while converting amount', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'amount' => $amount,
+                'from_currency' => $fromCurrency,
+                'to_currency' => $toCurrency
+            ]);
+            throw $e;
+        } catch (NetworkException $e) {
+            $this->logger->error('Network error while converting amount', [
+                'error' => $e->getMessage(),
+                'amount' => $amount,
+                'from_currency' => $fromCurrency,
+                'to_currency' => $toCurrency
+            ]);
+            throw $e;
         }
-
-        $convertedAmount = $amount / $rate;
-
-        $result = [
-            'original_amount' => $amount,
-            'from_currency' => strtoupper($fromCurrency),
-            'to_currency' => strtoupper($toCurrency),
-            'rate' => $rate,
-            'converted_amount' => round($convertedAmount, 8), // 8 decimals for crypto precision
-            'timestamp' => $rateData['timestamp'] ?? date('c')
-        ];
-
-        $this->logger->info('Successfully converted amount', [
-            'original_amount' => $amount,
-            'converted_amount' => $result['converted_amount'],
-            'rate' => $rate
-        ]);
-
-        return $result;
     }
 } 
