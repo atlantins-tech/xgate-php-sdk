@@ -46,7 +46,7 @@ class ExchangeRateResource
      * Get exchange rate between two currencies
      *
      * Retrieves the current exchange rate from one currency to another.
-     * Supports both fiat-to-fiat and fiat-to-crypto conversions.
+     * Uses the official conversion endpoint to calculate the rate.
      *
      * @param string $fromCurrency Source currency code (e.g., 'BRL', 'USD')
      * @param string $toCurrency Target currency code (e.g., 'USDT', 'BTC')
@@ -63,30 +63,39 @@ class ExchangeRateResource
      * //     'rate' => 5.45,
      * //     'from_currency' => 'BRL',
      * //     'to_currency' => 'USDT',
-     * //     'timestamp' => '2025-01-06T10:30:00Z',
-     * //     'source' => 'coinmarketcap',
-     * //     'expires_at' => '2025-01-06T10:35:00Z'
+     * //     'timestamp' => '2025-01-06T10:30:00Z'
      * // ]
      * ```
      */
     public function getExchangeRate(string $fromCurrency, string $toCurrency): array
     {
-        $this->logger->info('Getting exchange rate', [
+        $this->logger->info('Getting exchange rate using conversion endpoint', [
             'from_currency' => $fromCurrency,
             'to_currency' => $toCurrency
         ]);
 
         try {
-            $endpoint = self::ENDPOINT_EXCHANGE_RATES . '/' . strtoupper($fromCurrency) . '/' . strtoupper($toCurrency);
-            $data = $this->xgateClient->get($endpoint);
+            // Usar o endpoint de conversão que funciona para calcular a taxa
+            $testAmount = 1.0; // Usar 1 unidade para calcular a taxa
+            $conversion = $this->convertAmount($testAmount, $fromCurrency, $toCurrency);
+            
+            $rate = $conversion['amount'] ?? 0;
+            
+            $result = [
+                'rate' => $rate,
+                'from_currency' => strtoupper($fromCurrency),
+                'to_currency' => strtoupper($toCurrency),
+                'timestamp' => date('c'), // ISO 8601 timestamp
+                'source' => 'xgate_conversion'
+            ];
 
             $this->logger->info('Successfully retrieved exchange rate', [
                 'from_currency' => $fromCurrency,
                 'to_currency' => $toCurrency,
-                'rate' => $data['rate'] ?? 'unknown'
+                'rate' => $rate
             ]);
 
-            return $data;
+            return $result;
         } catch (ApiException $e) {
             $this->logger->error('API error while getting exchange rate', [
                 'error' => $e->getMessage(),
@@ -172,13 +181,13 @@ class ExchangeRateResource
     /**
      * Get cryptocurrency rates with detailed market data
      *
-     * Retrieves detailed exchange rate information for cryptocurrencies,
-     * including market cap, volume, and price change data.
+     * Retrieves exchange rate information for cryptocurrencies using the official conversion endpoint.
+     * Uses the same reliable endpoint as convertAmount() to ensure consistency.
      *
      * @param string $cryptoCurrency Cryptocurrency symbol (e.g., 'USDT', 'BTC')
      * @param string $fiatCurrency Fiat currency code (e.g., 'BRL', 'USD')
      *
-     * @return array Detailed cryptocurrency rate data
+     * @return array Cryptocurrency rate data
      *
      * @throws ApiException If the API returns an error response
      * @throws NetworkException If there's a network connectivity issue
@@ -190,31 +199,39 @@ class ExchangeRateResource
      * //     'rate' => 5.45,
      * //     'crypto_currency' => 'USDT',
      * //     'fiat_currency' => 'BRL',
-     * //     'market_cap' => 120000000000,
-     * //     'volume_24h' => 45000000000,
-     * //     'change_24h' => 0.12,
      * //     'timestamp' => '2025-01-06T10:30:00Z'
      * // ]
      * ```
      */
     public function getCryptoRate(string $cryptoCurrency, string $fiatCurrency): array
     {
-        $this->logger->info('Getting cryptocurrency rate', [
+        $this->logger->info('Getting cryptocurrency rate using conversion endpoint', [
             'crypto_currency' => $cryptoCurrency,
             'fiat_currency' => $fiatCurrency
         ]);
 
         try {
-            $endpoint = self::ENDPOINT_CRYPTO_RATES . '/' . strtoupper($cryptoCurrency) . '/' . strtoupper($fiatCurrency);
-            $data = $this->xgateClient->get($endpoint);
+            // Usar o endpoint de conversão que funciona para calcular a taxa
+            $testAmount = 1.0; // Usar 1 unidade para calcular a taxa
+            $conversion = $this->convertAmount($testAmount, $fiatCurrency, $cryptoCurrency);
+            
+            $rate = $conversion['amount'] ?? 0;
+            
+            $result = [
+                'rate' => $rate,
+                'crypto_currency' => strtoupper($cryptoCurrency),
+                'fiat_currency' => strtoupper($fiatCurrency),
+                'timestamp' => date('c'), // ISO 8601 timestamp
+                'source' => 'xgate_conversion'
+            ];
 
             $this->logger->info('Successfully retrieved cryptocurrency rate', [
                 'crypto_currency' => $cryptoCurrency,
                 'fiat_currency' => $fiatCurrency,
-                'rate' => $data['rate'] ?? 'unknown'
+                'rate' => $rate
             ]);
 
-            return $data;
+            return $result;
         } catch (ApiException $e) {
             $this->logger->error('API error while getting cryptocurrency rate', [
                 'error' => $e->getMessage(),
