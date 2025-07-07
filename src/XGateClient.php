@@ -796,38 +796,25 @@ class XGateClient
             // Adiciona headers de autenticação se o usuário estiver autenticado
             if ($this->isAuthenticated()) {
                 $authHeaders = $this->authManager->getAuthorizationHeader();
-                $this->logger->debug('Adding auth headers', [
-                    'auth_headers' => $authHeaders,
-                    'existing_headers' => $options['headers'] ?? [],
-                ]);
-                $options['headers'] = array_merge($options['headers'] ?? [], $authHeaders);
-                $this->logger->debug('Final headers', [
-                    'final_headers' => $options['headers'],
-                ]);
+                // Usa array_replace para evitar duplicação de headers
+                $options['headers'] = array_replace($options['headers'] ?? [], $authHeaders);
             }
 
             $response = $this->httpClient->request($method, $uri, $options);
-            $body = (string) $response->getBody();
+            $body = $response->getBody()->getContents();
 
-            // Tenta decodificar JSON
             $data = json_decode($body, true);
-
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new ApiException(
-                    'Resposta da API não é um JSON válido: ' . json_last_error_msg()
-                );
+                throw new XGateException('Resposta da API não é um JSON válido: ' . json_last_error_msg());
             }
 
-            return $data ?? [];
-        } catch (XGateException $e) {
-            // Re-lança exceções do SDK sem modificar
-            throw $e;
+            return $data;
+        } catch (ApiException $e) {
+            throw new XGateException($e->getMessage(), $e->getCode(), $e);
+        } catch (NetworkException $e) {
+            throw new XGateException('Erro de rede: ' . $e->getMessage(), 0, $e);
         } catch (\Exception $e) {
-            throw new ApiException(
-                'Erro inesperado na requisição: ' . $e->getMessage(),
-                0,
-                $e
-            );
+            throw new XGateException('Erro inesperado: ' . $e->getMessage(), 0, $e);
         }
     }
 
