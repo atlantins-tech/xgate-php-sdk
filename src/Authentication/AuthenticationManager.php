@@ -88,12 +88,24 @@ class AuthenticationManager implements AuthenticationManagerInterface
                 ]
             ]);
 
-            $data = json_decode($response->getBody()->getContents(), true);
+            // Obtém o corpo da resposta
+            $body = $response->getBody();
+            $body->rewind(); // Garante que está no início
+            $bodyContents = $body->getContents();
+            
+            $data = json_decode($bodyContents, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw AuthenticationException::loginFailed(
+                    $response->getStatusCode(),
+                    'Resposta da API não é um JSON válido: ' . json_last_error_msg()
+                );
+            }
 
             if (!isset($data['token'])) {
                 throw AuthenticationException::loginFailed(
                     $response->getStatusCode(),
-                    'Token de acesso não encontrado na resposta'
+                    'Token de acesso não encontrado na resposta. Dados recebidos: ' . json_encode($data)
                 );
             }
 
