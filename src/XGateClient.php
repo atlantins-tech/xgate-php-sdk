@@ -547,7 +547,7 @@ class XGateClient
         $this->ensureInitialized();
 
         if ($this->depositResource === null) {
-            $this->depositResource = new DepositResource($this->httpClient, $this->logger);
+            $this->depositResource = new DepositResource($this, $this->logger);
         }
 
         return $this->depositResource;
