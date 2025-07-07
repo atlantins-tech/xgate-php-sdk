@@ -507,9 +507,12 @@ class XGateClient
     }
 
     /**
-     * Obtém o resource para operações de taxa de câmbio
+     * Obtém o resource de taxas de câmbio
      *
-     * @return ExchangeRateResource Resource de taxa de câmbio
+     * Fornece acesso aos métodos de consulta de taxas de câmbio entre moedas.
+     * O resource é criado sob demanda e reutilizado em chamadas subsequentes.
+     *
+     * @return ExchangeRateResource Resource de taxas de câmbio
      *
      * @example
      * ```php
@@ -523,7 +526,7 @@ class XGateClient
         $this->ensureInitialized();
 
         if ($this->exchangeRateResource === null) {
-            $this->exchangeRateResource = new ExchangeRateResource($this->httpClient, $this->logger);
+            $this->exchangeRateResource = new ExchangeRateResource($this, $this->logger);
         }
 
         return $this->exchangeRateResource;

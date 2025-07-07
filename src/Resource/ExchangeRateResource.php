@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace XGate\Resource;
 
 use Psr\Log\LoggerInterface;
-use XGate\Http\HttpClient;
 use XGate\Exception\ApiException;
 use XGate\Exception\NetworkException;
 
@@ -21,7 +20,7 @@ use XGate\Exception\NetworkException;
  *
  * @example Basic exchange rate retrieval
  * ```php
- * $exchangeResource = new ExchangeRateResource($httpClient, $logger);
+ * $exchangeResource = new ExchangeRateResource($xgateClient, $logger);
  *
  * // Get BRL to USDT exchange rate
  * $rate = $exchangeResource->getExchangeRate('BRL', 'USDT');
@@ -37,7 +36,7 @@ class ExchangeRateResource
     private const ENDPOINT_CRYPTO_RATES = '/crypto/rates';
 
     public function __construct(
-        private readonly HttpClient $httpClient,
+        private readonly \XGate\XGateClient $xgateClient,
         private readonly LoggerInterface $logger
     ) {}
 
@@ -77,9 +76,7 @@ class ExchangeRateResource
 
         try {
             $endpoint = self::ENDPOINT_EXCHANGE_RATES . '/' . strtoupper($fromCurrency) . '/' . strtoupper($toCurrency);
-            $response = $this->httpClient->get($endpoint);
-            
-            $data = json_decode($response->getBody()->getContents(), true);
+            $data = $this->xgateClient->get($endpoint);
 
             $this->logger->info('Successfully retrieved exchange rate', [
                 'from_currency' => $fromCurrency,
@@ -145,8 +142,7 @@ class ExchangeRateResource
                 'to_currencies' => array_map('strtoupper', $toCurrencies)
             ];
 
-            $response = $this->httpClient->post(self::ENDPOINT_EXCHANGE_RATES . '/batch', ['json' => $requestData]);
-            $data = json_decode($response->getBody()->getContents(), true);
+            $data = $this->xgateClient->post(self::ENDPOINT_EXCHANGE_RATES . '/batch', $requestData);
 
             $this->logger->info('Successfully retrieved multiple exchange rates', [
                 'pairs_count' => count($data['rates'] ?? [])
@@ -208,9 +204,7 @@ class ExchangeRateResource
 
         try {
             $endpoint = self::ENDPOINT_CRYPTO_RATES . '/' . strtoupper($cryptoCurrency) . '/' . strtoupper($fiatCurrency);
-            $response = $this->httpClient->get($endpoint);
-            
-            $data = json_decode($response->getBody()->getContents(), true);
+            $data = $this->xgateClient->get($endpoint);
 
             $this->logger->info('Successfully retrieved cryptocurrency rate', [
                 'crypto_currency' => $cryptoCurrency,
@@ -292,9 +286,7 @@ class ExchangeRateResource
             ];
 
             $endpoint = self::ENDPOINT_EXCHANGE_RATES . '/' . strtoupper($fromCurrency) . '/' . strtoupper($toCurrency) . '/history';
-            $response = $this->httpClient->get($endpoint, ['query' => $queryParams]);
-            
-            $data = json_decode($response->getBody()->getContents(), true);
+            $data = $this->xgateClient->get($endpoint, ['query' => $queryParams]);
 
             $this->logger->info('Successfully retrieved historical exchange rates', [
                 'from_currency' => $fromCurrency,
