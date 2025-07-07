@@ -788,7 +788,7 @@ class XGateClient
      * @param array<string, mixed> $options Opções da requisição
      * @return array<string, mixed> Dados da resposta decodificados
      *
-     * @throws XGateException Se houver erro na requisição
+     * @throws ApiException Se houver erro na requisição
      */
     private function makeRequest(string $method, string $uri, array $options): array
     {
@@ -805,16 +805,16 @@ class XGateClient
 
             $data = json_decode($body, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new XGateException('Resposta da API não é um JSON válido: ' . json_last_error_msg());
+                throw new ApiException('Resposta da API não é um JSON válido: ' . json_last_error_msg());
             }
 
             return $data;
         } catch (ApiException $e) {
-            throw new XGateException($e->getMessage(), $e->getCode(), $e);
+            throw $e; // Re-lança ApiException sem modificar
         } catch (NetworkException $e) {
-            throw new XGateException('Erro de rede: ' . $e->getMessage(), 0, $e);
+            throw $e; // Re-lança NetworkException sem modificar
         } catch (\Exception $e) {
-            throw new XGateException('Erro inesperado: ' . $e->getMessage(), 0, $e);
+            throw new ApiException('Erro inesperado: ' . $e->getMessage(), null, null, $e);
         }
     }
 
