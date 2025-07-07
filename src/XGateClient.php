@@ -796,7 +796,14 @@ class XGateClient
             // Adiciona headers de autenticação se o usuário estiver autenticado
             if ($this->isAuthenticated()) {
                 $authHeaders = $this->authManager->getAuthorizationHeader();
+                $this->logger->debug('Adding auth headers', [
+                    'auth_headers' => $authHeaders,
+                    'existing_headers' => $options['headers'] ?? [],
+                ]);
                 $options['headers'] = array_merge($options['headers'] ?? [], $authHeaders);
+                $this->logger->debug('Final headers', [
+                    'final_headers' => $options['headers'],
+                ]);
             }
 
             $response = $this->httpClient->request($method, $uri, $options);
