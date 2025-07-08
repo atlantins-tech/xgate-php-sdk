@@ -656,6 +656,55 @@ class XGateClient
     }
 
     /**
+     * Obtém as carteiras de criptomoedas de um cliente
+     *
+     * @param string $customerId ID do cliente
+     * @return array Array de carteiras com blockchainNetworks e publicKey
+     *
+     * @throws XGateException Se houver erro na requisição
+     *
+     * @example
+     * ```php
+     * $wallets = $client->getCustomerWallets('customer_id');
+     * foreach ($wallets as $wallet) {
+     *     echo "Redes: " . implode(', ', $wallet['blockchainNetworks']);
+     *     echo "Chave pública: " . $wallet['publicKey'];
+     * }
+     * ```
+     */
+    public function getCustomerWallets(string $customerId): array
+    {
+        $this->ensureInitialized();
+
+        try {
+            $this->logger->info('Getting customer wallets', [
+                'customer_id' => $customerId
+            ]);
+
+            $response = $this->get("/crypto/customer/{$customerId}/wallet");
+            
+            if (!is_array($response)) {
+                throw new XGateException('Invalid response format for customer wallets');
+            }
+
+            $this->logger->info('Customer wallets retrieved successfully', [
+                'customer_id' => $customerId,
+                'wallets_count' => count($response)
+            ]);
+
+            return $response;
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Error getting customer wallets: ' . $e->getMessage(), [
+                'customer_id' => $customerId,
+                'error' => $e->getMessage()
+            ]);
+            
+            throw new XGateException('Error getting customer wallets: ' . $e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
      * Obtém o resource de pagamentos em criptomoedas
      *
      * Fornece acesso aos métodos de pagamento em criptomoedas como USDT.
