@@ -753,7 +753,7 @@ class XGateClient
      *     'amount' => 250.00,
      *     'currency' => 'BRL',
      *     'crypto_currency' => 'USDT',
-     *     'network' => 'TRC20',
+     *     'network' => 'ERC-20',
      *     'client_id' => 'client_456',
      *     'order_id' => 'order_789',
      *     'description' => 'Pagamento por serviços'

@@ -29,7 +29,7 @@ use XGate\Exception\NetworkException;
  *     'amount' => 100.50,
  *     'currency' => 'BRL',
  *     'crypto_currency' => 'USDT',
- *     'network' => 'TRC20',
+ *     'network' => 'ERC-20',
  *     'client_id' => 'client_123',
  *     'order_id' => 'order_456',
  *     'description' => 'Product payment'
@@ -72,7 +72,7 @@ class CryptoPaymentResource
      *     'amount' => 250.00,
      *     'currency' => 'BRL',
      *     'crypto_currency' => 'USDT',
-     *     'network' => 'TRC20',
+     *     'network' => 'ERC-20',
      *     'client_id' => 'client_456',
      *     'order_id' => 'order_789',
      *     'description' => 'Payment for services',
@@ -91,7 +91,7 @@ class CryptoPaymentResource
      * //     'amount_fiat' => 250.00,
      * //     'currency' => 'BRL',
      * //     'crypto_currency' => 'USDT',
-     * //     'network' => 'TRC20',
+     * //     'network' => 'ERC-20',
      * //     'exchange_rate' => 5.52,
      * //     'status' => 'pending',
      * //     'expires_at' => '2025-01-06T15:30:00Z',
@@ -105,7 +105,7 @@ class CryptoPaymentResource
             'amount' => $this->maskSensitiveData((string) $paymentData['amount']),
             'currency' => $paymentData['currency'] ?? 'BRL',
             'crypto_currency' => $paymentData['crypto_currency'] ?? 'USDT',
-            'network' => $paymentData['network'] ?? 'TRC20',
+            'network' => $paymentData['network'] ?? 'ERC-20',
             'client_id' => $this->maskSensitiveData($paymentData['client_id'] ?? '')
         ]);
 
@@ -150,7 +150,7 @@ class CryptoPaymentResource
                 'order_id' => $paymentData['order_id'] ?? null,
                 'description' => $paymentData['description'] ?? 'Cryptocurrency payment',
                 'callback_url' => $paymentData['callback_url'] ?? null,
-                'network' => $paymentData['network'] ?? 'TRC20',
+                'network' => $paymentData['network'] ?? 'ERC-20',
                 'type' => 'crypto_deposit',
                 'status' => 'pending'
             ];
@@ -163,7 +163,7 @@ class CryptoPaymentResource
                 'amount_crypto' => $conversionResult['amount'] ?? 0,
                 'currency' => $currency,
                 'crypto_currency' => $cryptoCurrency,
-                'network' => $paymentData['network'] ?? 'TRC20',
+                'network' => $paymentData['network'] ?? 'ERC-20',
                 'status' => 'pending',
                 'exchange_rate' => $amount / ($conversionResult['amount'] ?? 1),
                 'client_id' => $paymentData['client_id'] ?? null,
@@ -234,7 +234,7 @@ class CryptoPaymentResource
             'amount_received' => 0,
             'amount_expected' => 0,
             'wallet_address' => null,
-            'network' => 'TRC20',
+            'network' => 'ERC-20',
             'completed_at' => null,
             'created_at' => date('c'),
             'expires_at' => date('c', strtotime('+15 minutes'))
